@@ -3,6 +3,7 @@ const upload = require('../controllers/image_upload_controller');
 const pool = require("../db");
 const router = express.Router();
 
+/// Add Banquet Api
 router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
     try {
         const {
@@ -14,6 +15,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
             contact_number,
             banquet_map_link,
             description,
+            rating,
             district,
             min_capacity,
             max_capacity,
@@ -39,6 +41,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 contact_number,
                 banquet_map_link,
                 description,
+                rating,
                 district,
                 min_capacity,
                 max_capacity,
@@ -47,7 +50,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 nonveg_price,
                 images
               
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             ,
             [
                 feature_id,
@@ -58,6 +61,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 contact_number,
                 banquet_map_link,
                 description,
+                rating,
                 district,
                 min_capacity,
                 max_capacity,
@@ -82,7 +86,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
 
 
 
-///////////////////////////
+/// Get All Banquet Api
 router.get("/", async (req, res, next) => {
     try {
         const [rows] = await pool.query(`
@@ -92,6 +96,7 @@ router.get("/", async (req, res, next) => {
                     banquets.contact_number,
                     banquets.banquet_map_link,
                     banquets.description,
+                    banquets.rating,
                     banquets.district,
                     banquets.min_capacity,
                     banquets.max_capacity,
@@ -136,6 +141,7 @@ router.get("/", async (req, res, next) => {
     }
 });
 
+/// Get One Banquet Api
 router.get("/:id", async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -147,6 +153,7 @@ router.get("/:id", async (req, res, next) => {
                 banquets.contact_number,
                 banquets.banquet_map_link,
                 banquets.description,
+                banquets.rating,
                 banquets.district,
                 banquets.min_capacity,
                 banquets.max_capacity,
@@ -194,7 +201,7 @@ router.get("/:id", async (req, res, next) => {
 });
 
 
-// GET banquets by district
+// GET Banquets By Jila
 router.get("/district/:district", async (req, res, next) => {
     try {
         const { district } = req.params;
@@ -207,6 +214,7 @@ router.get("/district/:district", async (req, res, next) => {
                 banquets.contact_number,
                 banquets.banquet_map_link,
                 banquets.description,
+                banquets.rating,
                 banquets.district,
                 banquets.min_capacity,
                 banquets.max_capacity,
@@ -254,52 +262,31 @@ router.get("/district/:district", async (req, res, next) => {
     }
 });
 
-// Get Popular banquets
-
-router.get('/popular', async (req, res, next) => {
+// Get 10 Popular Banquets Api
+router.get('/popular/place', async (req, res, next) => {
     try {
         const [rows] = await pool.query(`
             SELECT 
-                banquets.banquet_name,
-                banquets.banquet_address,
-                banquets.contact_number,
-                banquets.banquet_map_link,
-                banquets.description,
-                banquets.district,
-                banquets.min_capacity,
-                banquets.max_capacity,
-                banquets.number_of_rooms,
-                banquets.veg_price,
-                banquets.nonveg_price,
-                banquets.images,
-
-                banquet_features.ac, 
-                banquet_features.wifi, 
-                banquet_features.cctv, 
-                banquet_features.sound_system, 
-                banquet_features.parking, 
-                banquet_features.fire_sefty,
-
-                booking_status.status_name AS booking_status,
-                availability_status.status_name AS availability_status
-
+                banquet_name,
+                banquet_address,
+                min_capacity,
+                max_capacity,
+                veg_price,
+                nonveg_price,
+                images
             FROM banquets 
-            LEFT JOIN banquet_features 
-                ON banquets.feature_id = banquet_features.id
-            LEFT JOIN availability_status  
-                ON banquets.availability_status_id = availability_status.id
-            LEFT JOIN booking_status 
-                ON banquets.booking_status_id = booking_status.id
-
-            ORDER BY banquets.nonveg_price DESC
+            ORDER BY nonveg_price DESC
             LIMIT 10;
         `);
 
-        // ⭐ Images Split
-        const popular = rows.map(b => {
+        // ⭐ Only First Image
+       
+         const popular = rows.map(b => {
             if (b.images) {
-                b.images = b.images.split(",");
+                const imgArray = b.images.split(",");
+                b.image = imgArray[0];   // 🔥 Sirf ek image
             }
+            delete b.images;  // 🔥 puri images array ko hata diya
             return b;
         });
 
@@ -308,8 +295,7 @@ router.get('/popular', async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-});
-
+}); 
 
 
 
