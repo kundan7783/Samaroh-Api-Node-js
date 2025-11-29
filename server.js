@@ -26,11 +26,7 @@ app.use('/api/wishlist',wishlistRouters);
 // app.use('/api/payment',paymentRouters);
 
 
-
-
-
-
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT,"0.0.0.0",()=> console.log(`Serever running on port ${PORT}`));
+app.listen(PORT,()=> console.log(`Serever running on port ${PORT}`));
