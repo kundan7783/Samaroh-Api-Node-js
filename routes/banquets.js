@@ -234,11 +234,16 @@ router.get("/district/:district", async (req, res, next) => {
             return res.status(404).json({ success: false, message: `No banquets found in ${district}` });
         }
 
+        // ⭐ Images array me convert karna
         const banquets = rows.map(b => {
-            if (b.images) b.images = b.images.split(",");
-            return b;
-        });
+           if (b.images) {
+               const imgArray = b.images.split(",");
 
+               // ⭐ Index 1 se start + sirf 1 images
+               b.images = imgArray.slice(0, 1);
+           }
+           return b;
+       });
         res.json(banquets);
 
     } catch (err) {
@@ -267,16 +272,19 @@ router.get('/popular/place', async (req, res, next) => {
 
         // ⭐ Only First Image
 
-        const popular = rows.map(b => {
+         // ⭐ Images array me convert karna
+         const banquets = rows.map(b => {
             if (b.images) {
                 const imgArray = b.images.split(",");
-                b.image = imgArray[0];   // 🔥 Sirf ek image
+
+                // ⭐ Index 1 se start + sirf 1 images
+                b.images = imgArray.slice(0, 1);
             }
-            delete b.images;  // 🔥 puri images array ko hata diya
             return b;
         });
 
-        res.json(popular);
+
+        res.json(banquets);
 
     } catch (error) {
         next(error);
