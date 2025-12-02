@@ -18,7 +18,7 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 app.use(bodyParser.json());
-app.use("uploades_images",express.static(path.join(__dirname,"uploades_images")));
+app.use("/uploades_images",express.static("uploades_images"));
 
 app.get('/', (req, res) => res.json({ message: 'Banquet API running' }));
 
