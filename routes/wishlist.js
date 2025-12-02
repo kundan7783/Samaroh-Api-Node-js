@@ -2,7 +2,6 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const verifyAuthToken = require("../middleware/authHandeler");
-const multer = require("multer");
 
 router.post("/", verifyAuthToken, async (req, res,next) => {
     try {
@@ -35,15 +34,24 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
             "SELECT * FROM wishlist WHERE user_id = ? AND banquet_id = ?",
             [user_id, banquet_id]
         );
+                if (rows.length > 0) {
+                            const wishlistId = rows[0].id;
+                            const currentStatus = rows[0].is_wishlist;
 
-        if (rows.length > 0) {
-            await pool.query(
-                "DELETE FROM wishlist WHERE user_id = ? AND banquet_id = ?",
-                [user_id, banquet_id]
-            );
+                            const newStatus = currentStatus === 1 ? 0 : 1;
 
-            return res.json({ success: true, message: "Removed from wishlist", is_wishlist: 0 });
-        }
+                            await pool.query(
+                                "UPDATE wishlist SET is_wishlist = ? WHERE id = ?",
+                                [newStatus, wishlistId]
+                            );
+
+                            return res.json({
+                                success: true,
+                                message: newStatus === 1 ? "Added to wishlist" : "Removed from wishlist",
+                                is_wishlist: newStatus,
+                                wishlist_id: wishlistId   // ⭐ same id
+                            });
+                        }
 
         await pool.query(
             "INSERT INTO wishlist (user_id, banquet_id, is_wishlist) VALUES (?, ?, 1)",
@@ -75,12 +83,13 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
 
         // Get all liked banquets
         const [wishlist] = await pool.query(
-            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.min_capacity, b.max_capacity
+            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district
              FROM wishlist w
              JOIN banquets b ON w.banquet_id = b.id
              WHERE w.user_id = ? AND w.is_wishlist = 1`,
             [user_id]
         );
+        console.log(wishlist);
 
         return res.json({ success: true, wishlist });
 

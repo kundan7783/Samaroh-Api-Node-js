@@ -8,8 +8,6 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
     try {
         const {
             feature_id,
-            availability_status_id,
-            booking_status_id,
             banquet_name,
             banquet_address,
             contact_number,
@@ -34,8 +32,6 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
         const [result] = await pool.query(
             `INSERT INTO banquets (
                 feature_id,
-                availability_status_id,
-                booking_status_id,
                 banquet_name,
                 banquet_address,
                 contact_number,
@@ -50,12 +46,10 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 nonveg_price,
                 images
               
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             ,
             [
                 feature_id,
-                availability_status_id,
-                booking_status_id,
                 banquet_name,
                 banquet_address,
                 contact_number,
@@ -87,59 +81,60 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
 
 
 /// Get All Banquet Api
-router.get("/", async (req, res, next) => {
-    try {
-        const [rows] = await pool.query(`
-            SELECT 
-                    banquets.banquet_name,
-                    banquets.banquet_address,
-                    banquets.contact_number,
-                    banquets.banquet_map_link,
-                    banquets.description,
-                    banquets.rating,
-                    banquets.district,
-                    banquets.min_capacity,
-                    banquets.max_capacity,
-                    banquets.number_of_rooms,
-                    banquets.veg_price,
-                    banquets.nonveg_price,
-                    banquets.images,
+// router.get("/", async (req, res, next) => {
+//     try {
+//         const [rows] = await pool.query(`
+//             SELECT  
+//                     banquets.id,
+//                     banquets.banquet_name,
+//                     banquets.banquet_address,
+//                     banquets.contact_number,
+//                     banquets.banquet_map_link,
+//                     banquets.description,
+//                     banquets.rating,
+//                     banquets.district,
+//                     banquets.min_capacity,
+//                     banquets.max_capacity,
+//                     banquets.number_of_rooms,
+//                     banquets.veg_price,
+//                     banquets.nonveg_price,
+//                     banquets.images,
 
-                    banquet_features.ac, 
-                    banquet_features.wifi, 
-                    banquet_features.cctv, 
-                    banquet_features.sound_system, 
-                    banquet_features.parking, 
-                    banquet_features.fire_sefty,
+//                     banquet_features.ac, 
+//                     banquet_features.wifi, 
+//                     banquet_features.cctv, 
+//                     banquet_features.sound_system, 
+//                     banquet_features.parking, 
+//                     banquet_features.fire_sefty,
 
-                    booking_status.status_name AS booking_status,
-                    availability_status.status_name AS availability_status
+//                     booking_status.status_name AS booking_status,
+//                     availability_status.status_name AS availability_status
 
-                FROM banquets 
-                LEFT JOIN banquet_features 
-                    ON banquets.feature_id = banquet_features.id
-                LEFT JOIN availability_status  
-                    ON banquets.availability_status_id = availability_status.id
-                LEFT JOIN booking_status 
-                    ON banquets.booking_status_id = booking_status.id;
+//                 FROM banquets 
+//                 LEFT JOIN banquet_features 
+//                     ON banquets.feature_id = banquet_features.id
+//                 LEFT JOIN availability_status  
+//                     ON banquets.availability_status_id = availability_status.id
+//                 LEFT JOIN booking_status 
+//                     ON banquets.booking_status_id = booking_status.id;
 
-        `);
+//         `);
 
-        // ⭐ Images array me convert karna
-        const banquets = rows.map(b => {
-            if(b.images) {
-                b.images = b.images.split(",");
-            }
-            return b;
-        });
+//         // ⭐ Images array me convert karna
+//         const banquets = rows.map(b => {
+//             if (b.images) {
+//                 b.images = b.images.split(",");
+//             }
+//             return b;
+//         });
 
 
-        res.json(banquets);
+//         res.json(banquets);
 
-    } catch (err) {
-        next(err)
-    }
-});
+//     } catch (err) {
+//         next(err)
+//     }
+// });
 
 /// Get One Banquet Api
 router.get("/:id", async (req, res, next) => {
@@ -147,7 +142,8 @@ router.get("/:id", async (req, res, next) => {
         const { id } = req.params;
 
         const [rows] = await pool.query(`
-            SELECT 
+            SELECT
+                banquets.id,
                 banquets.banquet_name,
                 banquets.banquet_address,
                 banquets.contact_number,
@@ -167,32 +163,31 @@ router.get("/:id", async (req, res, next) => {
                 banquet_features.cctv, 
                 banquet_features.sound_system, 
                 banquet_features.parking, 
-                banquet_features.fire_sefty,
-
-                booking_status.status_name AS booking_status,
-                availability_status.status_name AS availability_status
+                banquet_features.fire_sefty
 
             FROM banquets 
             LEFT JOIN banquet_features 
                 ON banquets.feature_id = banquet_features.id
-            LEFT JOIN availability_status  
-                ON banquets.availability_status_id = availability_status.id
-            LEFT JOIN booking_status 
-                ON banquets.booking_status_id = booking_status.id
             WHERE banquets.id = ?
         `, [id]);
 
-        if(rows.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ success: false, message: "Banquet not found" });
         }
 
         // ⭐ Images array me convert karna
         const banquets = rows.map(b => {
-            if(b.images) {
-                b.images = b.images.split(",");
+            if (b.images) {
+                const imgArray = b.images.split(",");
+
+                // ⭐ Index 1 se start + sirf 5 images
+                b.images = imgArray.slice(1, 6);
             }
             return b;
         });
+
+
+
         res.json(banquets[0]);
 
     } catch (err) {
@@ -228,30 +223,19 @@ router.get("/district/:district", async (req, res, next) => {
                 banquet_features.cctv, 
                 banquet_features.sound_system, 
                 banquet_features.parking, 
-                banquet_features.fire_sefty,
-
-                booking_status.status_name AS booking_status,
-                availability_status.status_name AS availability_status
-
+                banquet_features.fire_sefty
             FROM banquets 
             LEFT JOIN banquet_features 
                 ON banquets.feature_id = banquet_features.id
-            LEFT JOIN availability_status  
-                ON banquets.availability_status_id = availability_status.id
-            LEFT JOIN booking_status 
-                ON banquets.booking_status_id = booking_status.id
             WHERE banquets.district = ?
         `, [district]);
 
-        if(rows.length === 0) {
+        if (rows.length === 0) {
             return res.status(404).json({ success: false, message: `No banquets found in ${district}` });
         }
 
-        // ⭐ Images array me convert karna
         const banquets = rows.map(b => {
-            if(b.images) {
-                b.images = b.images.split(",");
-            }
+            if (b.images) b.images = b.images.split(",");
             return b;
         });
 
@@ -262,11 +246,13 @@ router.get("/district/:district", async (req, res, next) => {
     }
 });
 
+
 // Get 10 Popular Banquets Api
 router.get('/popular/place', async (req, res, next) => {
     try {
         const [rows] = await pool.query(`
-            SELECT 
+            SELECT
+                id,
                 banquet_name,
                 banquet_address,
                 min_capacity,
@@ -280,8 +266,8 @@ router.get('/popular/place', async (req, res, next) => {
         `);
 
         // ⭐ Only First Image
-       
-         const popular = rows.map(b => {
+
+        const popular = rows.map(b => {
             if (b.images) {
                 const imgArray = b.images.split(",");
                 b.image = imgArray[0];   // 🔥 Sirf ek image
@@ -295,7 +281,47 @@ router.get('/popular/place', async (req, res, next) => {
     } catch (error) {
         next(error);
     }
-}); 
+});
+
+/// Get All image one banquet
+router.get("/all-images/:id", async (req, res, next) => {
+    try {
+        const { id } = req.params;
+
+        const [rows] = await pool.query(
+            "SELECT images FROM banquets WHERE id = ?",
+            [id]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Banquet not found" });
+        }
+
+        let imagesArray = [];
+
+        if (rows[0].images) {
+            imagesArray = rows[0].images.split(",");
+        }
+
+        res.json({
+            success: true,
+            images: imagesArray
+        });
+
+    } catch (err) {
+        next(err);
+    }
+});
+
+/// get date And district par avaible
+
+// router.get('/date-and-district' , async(req,res,next)=>{
+//     try{
+
+//     }catch(error){
+
+//     }
+// })
 
 
 

@@ -4,6 +4,11 @@ const bodyParser = require('body-parser');
 const authRouters = require('./routes/auth');
 const userRouters = require('./routes/user');
 const banquetRouters = require('./routes/banquets');
+
+
+console.log("SID:", process.env.TWILIO_ACCOUNT_SID);
+console.log("TOKEN:", process.env.TWILIO_AUTH_TOKEN ? "OK" : "Missing");
+console.log("SERVICE:", process.env.TWILIO_SERVICE_SID);
 const ratingRouters = require('./routes/ratings');
 const wishlistRouters = require('./routes/wishlist');
 // const bookingRouters = require('./routes/bookings');
@@ -13,6 +18,7 @@ const errorHandler = require('./middleware/errorHandler');
 
 const app = express();
 app.use(bodyParser.json());
+
 
 app.get('/', (req, res) => res.json({ message: 'Banquet API running' }));
 

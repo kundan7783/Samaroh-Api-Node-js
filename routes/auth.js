@@ -1,4 +1,3 @@
-require('dotenv').config();
 const express = require('express');
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
@@ -15,13 +14,13 @@ function generateTokens(phone_number) {
     const accessToken = jwt.sign(
         {phone_number},
         process.env.JWT_ACCESS_SECRET,
-        { expiresIn: "15m" }
+        { expiresIn: "30d" }
     );
 
     const expireToken = jwt.sign(
         { phone_number },
         process.env.JWT_REFRESH_SECRET,
-        { expiresIn: "2d" }
+        { expiresIn: "60d" }
     );
 
     return { accessToken, expireToken };
