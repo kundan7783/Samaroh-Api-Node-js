@@ -203,30 +203,17 @@ router.get("/district/:district", async (req, res, next) => {
 
         const [rows] = await pool.query(`
             SELECT 
-                banquets.id,
-                banquets.banquet_name,
-                banquets.banquet_address,
-                banquets.contact_number,
-                banquets.banquet_map_link,
-                banquets.description,
-                banquets.rating,
-                banquets.district,
-                banquets.min_capacity,
-                banquets.max_capacity,
-                banquets.number_of_rooms,
-                banquets.veg_price,
-                banquets.nonveg_price,
-                banquets.images,
-
-                banquet_features.ac, 
-                banquet_features.wifi, 
-                banquet_features.cctv, 
-                banquet_features.sound_system, 
-                banquet_features.parking, 
-                banquet_features.fire_sefty
+                id,
+                banquet_name,
+                banquet_address,
+                min_capacity,
+                max_capacity,
+                veg_price,
+                rating,
+                district,
+                nonveg_price,
+                images
             FROM banquets 
-            LEFT JOIN banquet_features 
-                ON banquets.feature_id = banquet_features.id
             WHERE banquets.district = ?
         `, [district]);
 
@@ -263,6 +250,8 @@ router.get('/popular/place', async (req, res, next) => {
                 min_capacity,
                 max_capacity,
                 veg_price,
+                rating,
+                district,
                 nonveg_price,
                 images
             FROM banquets 
