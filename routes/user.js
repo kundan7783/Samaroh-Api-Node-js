@@ -68,9 +68,11 @@ router.get('/:id', verifyToken, async (req, res, next) => {
 });
 
 /// Put => update user
-router.patch('/:id', verifyToken, upload.single("image"), async (req, res, next) => {
+router.post('/:id', verifyToken, upload.single("image"), async (req, res, next) => {
   try {
     const { id } = req.params;
+    const { first_name, last_name, email} = req.body;
+
     const newImage = req.file ? req.file.filename : null;
 
     // 1️⃣ Check if user exists
@@ -81,52 +83,43 @@ router.patch('/:id', verifyToken, upload.single("image"), async (req, res, next)
 
     const user = rows[0];
 
-    // 2️⃣ Agar body me value nahi hai to purana data use karo
-    const first_name = req.body.first_name || user.first_name;
-    const last_name = req.body.last_name || user.last_name;
-    const email = req.body.email || user.email;
-    const image = newImage || user.image;
-
-    // 3️⃣ Old image delete only if:
-    //    ✔ newImage aaya ho
-    //    ✔ old image exist karti ho
+    // 2️⃣ Old image delete (only if new uploaded)
     if (newImage && user.image) {
       const oldImagePath = path.join(__dirname, "../uploades_images", user.image);
 
-      // 🔥 Important Fix: Check existence before delete
       if (fs.existsSync(oldImagePath)) {
-        fs.unlink(oldImagePath, (err) => {
-          if (err) {
-            console.error("Old image delete karte waqt error:", err);
-          } else {
-            console.log("Old image deleted:", user.image);
-          }
-        });
+        fs.unlinkSync(oldImagePath);
       } else {
-        console.log("⚠ Old image exist hi nahi karti, skip delete:", user.image);
+        console.log("⚠ Old image does not exist, skip:", user.image);
       }
     }
 
+    // 3️⃣ Decide new or old image
+    const finalImage = newImage ? newImage : user.image;
+
     // 4️⃣ Update user
     await myDB.query(
-      "UPDATE users SET first_name = ?, last_name = ?, email = ?, image = ? WHERE id = ?",
-      [first_name, last_name, email, image, id]
+      `UPDATE users 
+       SET first_name = ?, last_name = ?, email = ?, message = ?, image = ?
+       WHERE id = ?`,
+      [first_name, last_name, email, finalImage, id]
     );
 
+    // 5️⃣ Return updated data
     return res.status(200).json({
-      message: "Profile updated successfully",
-      data: {
-        first_name,
-        last_name,
-        email,
-        image: newImage || user.image,
-      }
+      id,
+      first_name,
+      last_name,
+      email,
+      message :"Profile updated successfully",
+      image: finalImage,
     });
 
   } catch (error) {
     next(error);
   }
 });
+
 
 
 
