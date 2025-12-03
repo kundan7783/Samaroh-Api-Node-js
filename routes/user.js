@@ -68,7 +68,7 @@ router.get('/:id', verifyToken, async (req, res, next) => {
 });
 
 /// Put => update user
-router.post('/:id', verifyToken, upload.single("image"), async (req, res, next) => {
+router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) => {
   try {
     const { id } = req.params;
     const { first_name, last_name, email} = req.body;
