@@ -100,7 +100,7 @@ router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) =
     // 4️⃣ Update user
     await myDB.query(
       `UPDATE users 
-       SET first_name = ?, last_name = ?, email = ?, message = ?, image = ?
+       SET first_name = ?, last_name = ?, email = ?, image = ?
        WHERE id = ?`,
       [first_name, last_name, email, finalImage, id]
     );
@@ -111,8 +111,8 @@ router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) =
       first_name,
       last_name,
       email,
-      message :"Profile updated successfully",
       image: finalImage,
+      message :"Profile updated successfully",
     });
 
   } catch (error) {
