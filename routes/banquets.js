@@ -78,9 +78,6 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
     }
 });
 
-
-
-/// Get All Banquet Api
 // router.get("/", async (req, res, next) => {
 //     try {
 //         const [rows] = await pool.query(`
