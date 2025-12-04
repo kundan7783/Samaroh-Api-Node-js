@@ -94,15 +94,20 @@ router.post('/verify-otp', async (req, res, next) => {
             [phone]
         );
 
+        let user_id = null;
+
         if (authRow.length === 0) {
             // INSERT
-            await myDB.query(
+             await myDB.query(
                 `INSERT INTO authentications 
                 (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
                 VALUES (?, ?, ?, ?, ?)`,
                 [phone, otp_code, otpExpireTime, expireToken, true]
             );
+            user_id = null;
+            
         } else {
+            user_id = authRow[0].user_id;  
             // UPDATE
             await myDB.query(
                 `UPDATE authentications 
@@ -114,7 +119,7 @@ router.post('/verify-otp', async (req, res, next) => {
 
         return res.json({
             message: "OTP Verified Successfully",
-            user_id,
+            user_id: user_id,
             accessToken,
             expireToken,
             status: result.status
