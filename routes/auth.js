@@ -114,6 +114,7 @@ router.post('/verify-otp', async (req, res, next) => {
 
         return res.json({
             message: "OTP Verified Successfully",
+            user_id,
             accessToken,
             expireToken,
             status: result.status
