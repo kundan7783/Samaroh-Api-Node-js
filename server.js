@@ -30,14 +30,7 @@ app.use('/api/rating',ratingRouters);
 app.use('/api/wishlist',wishlistRouters);
 // app.use('/api/booking',bookingRouters);
 // app.use('/api/payment',paymentRouters);
-app.get('/show/table/all',async(req,res,next)=>{
-    try{
-        const [wishlist] = await pool.query('SHOW TABLES');
-        res.json(wishlist);
-    }catch(error){
-        next(error);
-    }
-});
+
 
 
 app.use(errorHandler);

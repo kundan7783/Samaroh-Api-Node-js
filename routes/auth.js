@@ -124,6 +124,15 @@ router.post('/verify-otp', async (req, res, next) => {
     }
 });
 
+app.get('/show/table/all',async(req,res,next)=>{
+    try{
+        const [wishlist] = await myDB.query('SHOW TABLES');
+        res.json(wishlist);
+    }catch(error){
+        next(error);
+    }
+});
+
 // =========================
 // REFRESH TOKEN
 // =========================
