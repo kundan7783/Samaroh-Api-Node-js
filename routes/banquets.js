@@ -193,7 +193,7 @@ router.get("/:id", async (req, res, next) => {
 });
 
 
-// GET Banquets By Jila
+// GET Banquets By district
 router.get("/district/:district", async (req, res, next) => {
     try {
         const { district } = req.params;
@@ -277,7 +277,7 @@ router.get('/popular/place', async (req, res, next) => {
     }
 });
 
-/// Get All image one banquet
+/// Get All image of one banquet
 router.get("/all-images/:id", async (req, res, next) => {
     try {
         const { id } = req.params;
