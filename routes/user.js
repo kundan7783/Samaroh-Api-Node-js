@@ -71,7 +71,7 @@ router.get('/:id', verifyToken, async (req, res, next) => {
 router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { first_name, last_name, email} = req.body;
+    const { first_name, last_name, email,district} = req.body;
 
     const newImage = req.file ? req.file.filename : null;
 
