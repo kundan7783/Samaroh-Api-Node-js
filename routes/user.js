@@ -10,7 +10,7 @@ const upload = require("../controllers/image_upload_controller");
 /// Put => update user
 router.post('/', verifyToken, async (req, res, next) => {
     try {
-        const { first_name, last_name, email } = req.body;
+        const { first_name, last_name, email,district } = req.body;
         const phone_number = req.user.phone_number;
 
     
@@ -30,8 +30,8 @@ router.post('/', verifyToken, async (req, res, next) => {
         }
 
         const [result] = await myDB.query(
-            "INSERT INTO users (first_name, last_name, email) VALUES (?, ?, ?)",
-            [first_name, last_name, email]
+            "INSERT INTO users (first_name, last_name, email,district) VALUES (?, ?, ?,?)",
+            [first_name, last_name, email,district]
         );
   
         const userId = result.insertId;
@@ -100,9 +100,9 @@ router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) =
     // 4️⃣ Update user
     await myDB.query(
       `UPDATE users 
-       SET first_name = ?, last_name = ?, email = ?, image = ?
+       SET first_name = ?, last_name = ?, email = ?, district = ?, image = ?
        WHERE id = ?`,
-      [first_name, last_name, email, finalImage, id]
+      [first_name, last_name, email, district, finalImage, id]
     );
 
     // 5️⃣ Return updated data
@@ -111,6 +111,7 @@ router.put('/:id', verifyToken, upload.single("image"), async (req, res, next) =
       first_name,
       last_name,
       email,
+      district,
       image: finalImage,
       message :"Profile updated successfully",
     });
