@@ -24,11 +24,6 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
         const userId = userRows[0].user_id;
 
         const { rating, review_text } = req.body;
-
-        if (!rating) {
-            return res.status(400).json({ success: false, message: "Rating is required" });
-        }
-
         // Handle Images
         let images = null;
         if (req.files && req.files.length > 0) {
@@ -66,7 +61,10 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
         res.json({
             success: true,
             message: "Rating added successfully",
-            rating_id: result.insertId
+            rating_id: result.insertId,
+            rating: rating ,
+            review_text: review_text,
+            images: req.files ? req.files.map(file => file.filename) : [],
         });
 
     } catch (error) {
