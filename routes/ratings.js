@@ -123,6 +123,44 @@ router.get('/:banquet_id', verifyAuthToken, async (req, res, next) => {
     }
 });
 
+router.get('/summary/:banquet_id', async (req, res, next) => {
+    try {
+        const { banquet_id } = req.params;
+        const [rows] = await pool.query(
+            `SELECT rating, COUNT(*) AS total
+                FROM ratings
+                WHERE banquet_id = ?
+                GROUP BY rating`,
+            [banquet_id]
+        );
+        const stars = { "1": 0, "2": 0, "3": 0, "4": 0, "5": 0 };
+        rows.forEach(r => {
+            stars[String(r.rating)] = r.total;
+        });
+        const totalReviews = Object.values(stars).reduce((acc, v) => acc + v, 0);
+        let avg = 0;
+        if (totalReviews > 0) {
+            avg = (
+                1 * stars["1"] +
+                2 * stars["2"] +
+                3 * stars["3"] +
+                4 * stars["4"] +
+                5 * stars["5"]
+            ) / totalReviews;
+        }
+
+        res.json({
+            success: true,
+            average_rating: avg.toFixed(1), // "4.2" like your example
+            total_reviews: totalReviews,
+            stars: stars
+        });
+
+    } catch (error) {
+        next(error);
+    }
+});
+
 
 
 module.exports = router;
