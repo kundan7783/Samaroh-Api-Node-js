@@ -121,7 +121,7 @@ router.get('/:banquet_id', verifyAuthToken, async (req, res, next) => {
     }
 });
 
-router.get('/summary/:banquet_id', async (req, res, next) => {
+router.get('/summary/:banquet_id',verifyAuthToken, async (req, res, next) => {
     try {
         const { banquet_id } = req.params;
         const [rows] = await pool.query(
