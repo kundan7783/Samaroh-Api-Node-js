@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 
-router.delete('/delete-user/user-table',async(req,res,next)=>{
+router.delete('/user-table',async(req,res,next)=>{
     try{
 
         
@@ -16,7 +16,7 @@ router.delete('/delete-user/user-table',async(req,res,next)=>{
     }
 });
 
-router.delete('/delete-auth/auth-table',async(req,res,next)=>{
+router.delete('/auth-table',async(req,res,next)=>{
     try{
 
 

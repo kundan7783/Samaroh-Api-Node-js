@@ -4,13 +4,9 @@ const bodyParser = require('body-parser');
 const authRouters = require('./routes/auth');
 const userRouters = require('./routes/user');
 const banquetRouters = require('./routes/banquets');
-
-
-console.log("SID:", process.env.TWILIO_ACCOUNT_SID);
-console.log("TOKEN:", process.env.TWILIO_AUTH_TOKEN ? "OK" : "Missing");
-console.log("SERVICE:", process.env.TWILIO_SERVICE_SID);
 const ratingRouters = require('./routes/ratings');
 const wishlistRouters = require('./routes/wishlist');
+const clearTableRouters = require('./routes/clearTable');
 // const bookingRouters = require('./routes/bookings');
 // const paymentRouters = require('./routes/payment');
 const errorHandler = require('./middleware/errorHandler');
@@ -28,6 +24,7 @@ app.use('/api/user',userRouters);
 app.use('/api/banquet',banquetRouters);
 app.use('/api/rating',ratingRouters);
 app.use('/api/wishlist',wishlistRouters);
+app.use('/api/clear-table',clearTableRouters);
 // app.use('/api/booking',bookingRouters);
 // app.use('/api/payment',paymentRouters);
 
