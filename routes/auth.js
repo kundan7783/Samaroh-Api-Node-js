@@ -7,9 +7,7 @@ const myDB = require('../db');
 const router = express.Router();
 
 
-// =========================
-// TOKEN GENERATOR FUNCTION
-// =========================
+
 function generateTokens(phone_number) {
     const accessToken = jwt.sign(
         {phone_number},
@@ -27,10 +25,6 @@ function generateTokens(phone_number) {
 }
 
 
-
-// =========================
-// SEND OTP
-// =========================
 router.post('/send-otp', phoneValidator, async (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -60,11 +54,6 @@ router.post('/send-otp', phoneValidator, async (req, res, next) => {
 });
 
 
-
-
-// =========================
-// VERIFY OTP
-// =========================
 router.post('/verify-otp', async (req, res, next) => {
     try {
         const { phone, otp_code } = req.body;
@@ -139,9 +128,6 @@ router.get('/show/table/all',async(req,res,next)=>{
     }
 });
 
-// =========================
-// REFRESH TOKEN
-// =========================
 router.post('/refresh-token', async (req, res, next) => {
     try {
         const { refreshToken } = req.body;

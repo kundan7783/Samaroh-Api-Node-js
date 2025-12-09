@@ -9,48 +9,51 @@ const upload = require("../controllers/image_upload_controller");
 
 /// Put => update user
 router.post('/', verifyToken, async (req, res, next) => {
-    try {
-        const { first_name, last_name, email,district } = req.body;
-        const phone_number = req.user.phone_number;
+  try {
+      const { first_name, last_name, email, district } = req.body;
+      const phone_number = req.user.phone_number;
 
-    
-        const [authRows] = await myDB.query(
-            "SELECT user_id FROM authentications WHERE phone_number = ?",
-            [phone_number]
-        );
+      const [authRows] = await myDB.query(
+          "SELECT user_id FROM authentications WHERE phone_number = ?",
+          [phone_number]
+      );
 
-            // Agar ye phone number database me mil gaya
-            // AUR
-            // uska profile pehle se bana hua hai (user_id null nahi hai)
+      if (authRows.length > 0 && authRows[0].user_id !== null) {
+          return res.status(400).json({
+              message: "Profile already completed. You cannot create again."
+          });
+      }
 
-        if (authRows.length > 0 && authRows[0].user_id !== null) {
-            return res.status(400).json({
-                message: "Profile already completed. You cannot create again."
-            });
-        }
+      // Insert user
+      const [result] = await myDB.query(
+          "INSERT INTO users (first_name, last_name, email, district) VALUES (?, ?, ?, ?)",
+          [first_name, last_name, email, district]
+      );
 
-        const [result] = await myDB.query(
-            "INSERT INTO users (first_name, last_name, email,district) VALUES (?, ?, ?,?)",
-            [first_name, last_name, email,district]
-        );
-  
-        const userId = result.insertId;
+      const userId = result.insertId;
 
+      // Update authentications table
+      await myDB.query(
+          "UPDATE authentications SET user_id = ? WHERE phone_number = ?",
+          [userId, phone_number]
+      );
 
-        await myDB.query(
-            "UPDATE authentications SET user_id = ? WHERE phone_number = ?",
-            [userId, phone_number]
-        );
+      // Fetch user without image (image null hogi)
+      const [userData] = await myDB.query(
+          "SELECT id, first_name, last_name, email, district, image FROM users WHERE id = ?",
+          [userId]
+      );
 
-        res.status(201).json({
-            message: "Account completed successfully",
-            userId: userId
-        });
+      return res.status(201).json({
+          message: "Account completed successfully",
+          ...userData[0]
+      });
 
-    } catch (error) {
-        next(error);
-    }
+  } catch (error) {
+      next(error);
+  }
 });
+
 
 /// Get => get one user
 router.get('/:id', verifyToken, async (req, res, next) => {
