@@ -92,8 +92,6 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
         const banquets = wishlist.map(b => {
             if (b.images) {
                 const imgArray = b.images.split(",");
- 
-                // ⭐ Index 1 se start + sirf 1 images
                 b.images = imgArray.slice(0, 1);
             }
             return b;
@@ -101,7 +99,7 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
 
         console.log(banquets);
 
-        return res.json(wishlist);
+        return res.json(banquets);
 
     } catch (error) {
         next(error);
