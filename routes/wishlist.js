@@ -35,21 +35,21 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
             [user_id, banquet_id]
         );
                 if (rows.length > 0) {
-                            const wishlistId = rows[0].id;
+                            const id = rows[0].id;
                             const currentStatus = rows[0].is_wishlist;
 
                             const newStatus = currentStatus === 1 ? 0 : 1;
 
                             await pool.query(
                                 "UPDATE wishlist SET is_wishlist = ? WHERE id = ?",
-                                [newStatus, wishlistId]
+                                [newStatus, id]
                             );
 
                             return res.json({
+                                id : id,
                                 success: true,
                                 message: newStatus === 1 ? "Added to wishlist" : "Removed from wishlist",
                                 is_wishlist: newStatus,
-                                wishlist_id: wishlistId   // ⭐ same id
                             });
                         }
 
