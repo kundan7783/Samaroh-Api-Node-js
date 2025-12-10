@@ -83,13 +83,23 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
 
         // Get all liked banquets
         const [wishlist] = await pool.query(
-            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district
+            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district , b.rating , b.images
              FROM wishlist w
              JOIN banquets b ON w.banquet_id = b.id
              WHERE w.user_id = ? AND w.is_wishlist = 1`,
             [user_id]
         );
-        console.log(wishlist);
+        const banquets = wishlist.map(b => {
+            if (b.images) {
+                const imgArray = b.images.split(",");
+ 
+                // ⭐ Index 1 se start + sirf 1 images
+                b.images = imgArray.slice(0, 1);
+            }
+            return b;
+        });
+
+        console.log(banquets);
 
         return res.json(wishlist);
 
