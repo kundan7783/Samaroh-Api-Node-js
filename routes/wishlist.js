@@ -91,7 +91,7 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
         );
         console.log(wishlist);
 
-        return res.json({ success: true, wishlist });
+        return res.json(wishlist);
 
     } catch (error) {
         next(error);
