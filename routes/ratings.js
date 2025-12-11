@@ -60,11 +60,11 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
 
         res.json({
             success: true,
-            message: "Rating added successfully",
-            rating_id: result.insertId,
+            id: result.insertId,
             rating: rating ,
             review_text: review_text,
             images: req.files ? req.files.map(file => file.filename) : [],
+            message: "Rating added successfully",
         });
 
     } catch (error) {
