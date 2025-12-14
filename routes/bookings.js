@@ -171,7 +171,7 @@ router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
     }
 });
 
-router.get('/user-booked-banquets', verifyAuthToken,  async (req, res, next) => {
+router.get('/all/booking', verifyAuthToken,  async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
 
