@@ -1,20 +1,261 @@
 const express = require("express");
 const router = express.Router();
 const pool = require("../db");
+const verifyAuthToken = require("../middleware/authHandeler");
 
-router.post('/',async(req,res,next)=>{
-    try{
+// 🔥 Unique Booking ID Generator
+function generateUniqueBookingID(user_id) {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `BK${year}${month}${day}U${user_id}R${random}`;
+}
 
-    }catch(error){
-       next(error);
+router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
+    try {
+        const phone_number = req.user.phone_number;
+
+        // 1️⃣ Get user_id
+        const [userRows] = await pool.query(
+            "SELECT user_id FROM authentications WHERE phone_number = ?",
+            [phone_number]
+        );
+
+        if (userRows.length === 0) {
+            return res.status(400).json({ success: false, message: "User not found" });
+        }
+
+        const user_id =  userRows[0].user_id;
+        const { banquet_id } = req.params;
+
+        // 2️⃣ Request body
+        const {
+            booking_date,
+            total_guest,
+            total_room,
+            event_type,
+            food_type,
+            price_per_plate,
+            room_charge
+        } = req.body;
+
+        // 3️⃣ Calculations
+        const food_subtotal = total_guest * price_per_plate;
+        const total_amount  = food_subtotal + room_charge;
+
+        // 4️⃣ Booking UID
+        const booking_uid = generateUniqueBookingID(user_id);
+
+        // 5️⃣ Insert booking
+        await pool.query(
+            `INSERT INTO bookings (
+                booking_uid,
+                user_id,
+                banquet_id,
+                booking_date,
+                total_guest,
+                total_room,
+                event_type,
+                food_type,
+                price_per_plate,
+                food_subtotal,
+                room_charge,
+                total_amount
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                booking_uid,
+                user_id,
+                banquet_id,
+                booking_date,
+                total_guest,
+                total_room,
+                event_type,
+                food_type,
+                price_per_plate,
+                food_subtotal,
+                room_charge,
+                total_amount
+            ]
+        );
+
+        res.status(201).json({
+            success: true,
+            message: "Booking created successfully",
+            booking_id: booking_uid,
+            total_amount,
+            payment_status: "pending"
+        });
+
+    } catch (error) {
+        next(error);
     }
 });
 
-router.get('/',async(req,res,next)=>{
-    try{
 
-    }catch(error){
-       next(error);
+
+// // GET /api/booking/:booking_uid
+// router.post('/:banquet_id', async (req, res, next) => {
+//     try {
+//         const user_id = 1; // hardcode
+//         const { banquet_id } = req.params;
+//         const { booking_date, total_guest, total_room, event_type, food_type, price_per_plate, room_charge } = req.body;
+
+//         const food_subtotal = total_guest * price_per_plate;
+//         const total_amount = food_subtotal + room_charge;
+//         const booking_uid = generateUniqueBookingID(user_id);
+
+//         await pool.query(
+//             `INSERT INTO bookings (
+//                 booking_uid, user_id, banquet_id, booking_date,
+//                 total_guest, total_room, event_type, food_type,
+//                 price_per_plate, food_subtotal, room_charge, total_amount
+//             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+//             [booking_uid, user_id, banquet_id, booking_date,
+//                 total_guest, total_room, event_type, food_type,
+//                 price_per_plate, food_subtotal, room_charge, total_amount]
+//         );
+
+//         res.status(201).json({
+//             success: true,
+//             message: "Booking created successfully",
+//             booking_id: booking_uid,
+//             total_amount,
+//             payment_status: "pending"
+//         });
+//     } catch (error) {
+//         next(error);
+//     }
+// });
+
+router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
+    try {
+         const phone_number = req.user.phone_number;
+        const { booking_uid } = req.params;
+
+        // 1️⃣ Get user_id
+        const [userRows] = await pool.query(
+            "SELECT user_id FROM authentications WHERE phone_number = ?",
+            [phone_number]
+        );
+        if (userRows.length === 0) {
+            return res.status(400).json({ success: false, message: "User not found" });
+        }
+        const user_id =  userRows[0].user_id;
+
+        // 2️⃣ Get booking + banquet + payment (LEFT JOIN)
+        const [rows] = await pool.query(
+            `
+            SELECT
+                banquets.images,    
+                banquets.banquet_name,
+                banquets.banquet_address,
+                
+                bookings.booking_date,
+                bookings.total_guest,
+                bookings.booking_uid AS booking_id,
+                bookings.event_type,
+                bookings.total_room,
+                bookings.food_type,
+                bookings.price_per_plate,
+                bookings.food_subtotal,
+                bookings.room_charge,
+                bookings.total_amount,
+
+                payments.advance_paid,
+                payments.remaining_amount,
+                payments.transaction_id,
+                payments.payment_status,
+                payments.payment_date
+
+            FROM bookings 
+            JOIN banquets ON bookings.banquet_id = banquets.id
+            LEFT JOIN payments ON bookings.booking_uid = payments.booking_uid
+            WHERE bookings.user_id = ? AND bookings.booking_uid = ?
+            `,
+            [user_id, booking_uid]
+        );
+
+        if (rows.length === 0) {
+            return res.status(404).json({ success: false, message: "Booking not found" });
+        }
+
+        const booking = rows[0];
+
+        // 🔹 Images array with only first image
+        if (booking.images) {
+            const imgArray = booking.images.split(",");  // agar comma separated
+            booking.images = [imgArray[0]];  // first image as array
+        } else {
+            booking.images = []; // agar image nahi hai
+        }
+
+        // 🔹 Default payment values agar record nahi hai
+        if (!booking.payment_status) {
+            booking.advance_paid = 0;
+            booking.remaining_amount = 0;
+            booking.transaction_id = null;
+            booking.payment_status = "pending";
+            booking.payment_date = null;
+        }
+
+        return res.status(200).json(booking);
+
+    } catch (error) {
+        next(error);
     }
 });
+router.get('/user-booked-banquets', verifyAuthToken,  async (req, res, next) => {
+    try {
+        const phone_number = req.user.phone_number;
+
+
+        // 1️⃣ Get user_id
+        const [userRows] = await pool.query(
+            "SELECT user_id FROM authentications WHERE phone_number = ?",
+            [phone_number]
+        );
+        if (userRows.length === 0) {
+            return res.status(400).json({ success: false, message: "User not found" });
+        }
+        const user_id =  userRows[0].user_id;
+
+  
+      const [rows] = await pool.query(
+        `
+        SELECT 
+          bk.booking_uid,
+          b.banquet_name,
+          b.banquet_address,
+          b.min_capacity,
+          b.max_capacity,
+          b.images
+        FROM bookings AS bk
+        INNER JOIN banquets AS b 
+          ON bk.banquet_id = b.id
+        WHERE bk.user_id = ?
+        `,
+        [user_id]
+      );
+  
+      rows.forEach(item => {
+        if (item.images) {
+          item.images = [item.images.split(",")[0]]; // sirf first image
+        } else {
+          item.images = [];
+        }
+      });
+  
+      res.status(200).json(rows);
+  
+    } catch (error) {
+      next(error);
+    }
+  });
+  
+
+module.exports = router;
+
+
 

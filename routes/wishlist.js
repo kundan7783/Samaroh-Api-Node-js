@@ -97,7 +97,7 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
             return b;
         });
 
-        console.log(banquets);
+        //console.log(banquets);
 
         return res.json(banquets);
 
