@@ -93,42 +93,6 @@ router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
     }
 });
 
-
-
-// // GET /api/booking/:booking_uid
-// router.post('/:banquet_id', async (req, res, next) => {
-//     try {
-//         const user_id = 1; // hardcode
-//         const { banquet_id } = req.params;
-//         const { booking_date, total_guest, total_room, event_type, food_type, price_per_plate, room_charge } = req.body;
-
-//         const food_subtotal = total_guest * price_per_plate;
-//         const total_amount = food_subtotal + room_charge;
-//         const booking_uid = generateUniqueBookingID(user_id);
-
-//         await pool.query(
-//             `INSERT INTO bookings (
-//                 booking_uid, user_id, banquet_id, booking_date,
-//                 total_guest, total_room, event_type, food_type,
-//                 price_per_plate, food_subtotal, room_charge, total_amount
-//             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-//             [booking_uid, user_id, banquet_id, booking_date,
-//                 total_guest, total_room, event_type, food_type,
-//                 price_per_plate, food_subtotal, room_charge, total_amount]
-//         );
-
-//         res.status(201).json({
-//             success: true,
-//             message: "Booking created successfully",
-//             booking_id: booking_uid,
-//             total_amount,
-//             payment_status: "pending"
-//         });
-//     } catch (error) {
-//         next(error);
-//     }
-// });
-
 router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
     try {
          const phone_number = req.user.phone_number;
@@ -206,6 +170,7 @@ router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
         next(error);
     }
 });
+
 router.get('/user-booked-banquets', verifyAuthToken,  async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
@@ -238,16 +203,17 @@ router.get('/user-booked-banquets', verifyAuthToken,  async (req, res, next) => 
         `,
         [user_id]
       );
+      const booking = rows[0];
+
+      // 🔹 Images array with only first image
+      if (booking.images) {
+          const imgArray = booking.images.split(",");  // agar comma separated
+          booking.images = [imgArray[0]];  // first image as array
+      } else {
+          booking.images = []; // agar image nahi hai
+      }
   
-      rows.forEach(item => {
-        if (item.images) {
-          item.images = [item.images.split(",")[0]]; // sirf first image
-        } else {
-          item.images = [];
-        }
-      });
-  
-      res.status(200).json(rows);
+      res.status(200).json(booking);
   
     } catch (error) {
       next(error);
