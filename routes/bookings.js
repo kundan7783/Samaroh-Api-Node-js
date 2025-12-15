@@ -112,9 +112,11 @@ router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
         const [rows] = await pool.query(
             `
             SELECT
+                banquets.id,
                 banquets.images,    
                 banquets.banquet_name,
                 banquets.banquet_address,
+                
                 
                 bookings.booking_date,
                 bookings.total_guest,
