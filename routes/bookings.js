@@ -13,7 +13,7 @@ function generateUniqueBookingID(user_id) {
     return `BK${year}${month}${day}U${user_id}R${random}`;
 }
 
-router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
+router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
 
@@ -24,10 +24,13 @@ router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
         );
 
         if (userRows.length === 0) {
-            return res.status(400).json({ success: false, message: "User not found" });
+            return res.status(400).json({
+                success: false,
+                message: "User not found"
+            });
         }
 
-        const user_id =  userRows[0].user_id;
+        const user_id = userRows[0].user_id;
         const { banquet_id } = req.params;
 
         // 2️⃣ Request body
@@ -41,14 +44,37 @@ router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
             room_charge
         } = req.body;
 
-        // 3️⃣ Calculations
-        const food_subtotal = total_guest * price_per_plate;
-        const total_amount  = food_subtotal + room_charge;
+        // ❌ VALIDATION
+        if (!booking_date || !total_guest || !event_type) {
+            return res.status(400).json({
+                success: false,
+                message: "Required fields missing"
+            });
+        }
 
-        // 4️⃣ Booking UID
+        // 🔍 3️⃣ CHECK: Banquet already booked on same date
+        const [existingBooking] = await pool.query(
+            `SELECT id FROM bookings 
+             WHERE banquet_id = ? 
+             AND booking_date = ?`,
+            [banquet_id, booking_date]
+        );
+
+        if (existingBooking.length > 0) {
+            return res.status(409).json({
+                success: false,
+                message: "This banquet is already booked for the selected date"
+            });
+        }
+
+        // 4️⃣ Calculations
+        const food_subtotal = total_guest * price_per_plate;
+        const total_amount = food_subtotal + room_charge;
+
+        // 5️⃣ Booking UID
         const booking_uid = generateUniqueBookingID(user_id);
 
-        // 5️⃣ Insert booking
+        // 6️⃣ Insert booking
         await pool.query(
             `INSERT INTO bookings (
                 booking_uid,
@@ -80,7 +106,7 @@ router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
             ]
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "Booking created successfully",
             booking_id: booking_uid,
@@ -92,6 +118,7 @@ router.post('/:banquet_id', verifyAuthToken ,async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
     try {
