@@ -33,7 +33,6 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
         const user_id = userRows[0].user_id;
         const { banquet_id } = req.params;
 
-        // 2️⃣ Request body
         const {
             booking_date,
             total_guest,
@@ -41,7 +40,8 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
             event_type,
             food_type,
             price_per_plate,
-            room_charge
+            room_charge,
+            checkOnly // ⭐ new flag from client
         } = req.body;
 
         // ❌ VALIDATION
@@ -52,7 +52,7 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
             });
         }
 
-        // 🔍 3️⃣ CHECK: Banquet already booked on same date
+        // 🔍 CHECK: Banquet already booked on same date
         const [existingBooking] = await pool.query(
             `SELECT id FROM bookings 
              WHERE banquet_id = ? 
@@ -60,6 +60,22 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
             [banquet_id, booking_date]
         );
 
+        if (checkOnly) {
+            // ⭐ If checkOnly, just return availability
+            if (existingBooking.length > 0) {
+                return res.json({
+                    success: false,
+                    message: "This banquet is already booked for the selected date"
+                });
+            } else {
+                return res.json({
+                    success: true,
+                    message: "Available"
+                });
+            }
+        }
+
+        // 🔹 Normal booking flow
         if (existingBooking.length > 0) {
             return res.status(409).json({
                 success: false,
@@ -118,6 +134,7 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
         next(error);
     }
 });
+
 
 
 router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
