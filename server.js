@@ -9,7 +9,7 @@ const wishlistRouters = require('./routes/wishlist');
 const clearTableRouters = require('./routes/clearTable');
 const bookingRouters = require('./routes/bookings');
 const createTableRouters = require('./routes/createTable');
-// const paymentRouters = require('./routes/payment');
+const paymentRouters = require('./routes/payment');
 const errorHandler = require('./middleware/errorHandler');
 
 
@@ -28,7 +28,7 @@ app.use('/api/wishlist',wishlistRouters);
 app.use('/api/clear-table',clearTableRouters);
 app.use('/api/booking',bookingRouters);
 app.use('/api/createTable',createTableRouters);
-// app.use('/api/payment',paymentRouters);
+ app.use('/api/payment',paymentRouters);
 
 
 
