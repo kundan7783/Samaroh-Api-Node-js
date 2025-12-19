@@ -135,6 +135,55 @@ router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
     }
 });
 
+router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
+    try {
+      const phone_number = req.user.phone_number;
+  
+      // 1️⃣ Get user_id
+      const [userRows] = await pool.query(
+        "SELECT user_id FROM authentications WHERE phone_number = ?",
+        [phone_number]
+      );
+      if (userRows.length === 0) {
+        return res.status(400).json({ success: false, message: "User not found" });
+      }
+      const user_id = userRows[0].user_id;
+  
+      // 2️⃣ Get all bookings for this user
+      const [rows] = await pool.query(
+        `
+        SELECT 
+          bk.booking_uid,
+          b.banquet_name,
+          b.banquet_address,
+          b.min_capacity,
+          b.max_capacity,
+          b.images
+        FROM bookings AS bk
+        INNER JOIN banquets AS b 
+          ON bk.banquet_id = b.id
+        WHERE bk.user_id = ?
+        `,
+        [user_id]
+      );
+  
+      // 3️⃣ Format images for each booking
+      const formattedBookings = rows.map(item => ({
+        booking_uid: item.booking_uid,
+        banquet_name: item.banquet_name,
+        banquet_address: item.banquet_address,
+        min_capacity: item.min_capacity,
+        max_capacity: item.max_capacity,
+        images: item.images ? [item.images.split(",")[0]] : []
+      }));
+  
+      res.status(200).json(formattedBookings);
+  
+    } catch (error) {
+      next(error);
+    }
+  });
+
 
 
 router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
@@ -218,54 +267,7 @@ router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
     }
 });
 
-router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
-    try {
-      const phone_number = req.user.phone_number;
-  
-      // 1️⃣ Get user_id
-      const [userRows] = await pool.query(
-        "SELECT user_id FROM authentications WHERE phone_number = ?",
-        [phone_number]
-      );
-      if (userRows.length === 0) {
-        return res.status(400).json({ success: false, message: "User not found" });
-      }
-      const user_id = userRows[0].user_id;
-  
-      // 2️⃣ Get all bookings for this user
-      const [rows] = await pool.query(
-        `
-        SELECT 
-          bk.booking_uid,
-          b.banquet_name,
-          b.banquet_address,
-          b.min_capacity,
-          b.max_capacity,
-          b.images
-        FROM bookings AS bk
-        INNER JOIN banquets AS b 
-          ON bk.banquet_id = b.id
-        WHERE bk.user_id = ?
-        `,
-        [user_id]
-      );
-  
-      // 3️⃣ Format images for each booking
-      const formattedBookings = rows.map(item => ({
-        booking_uid: item.booking_uid,
-        banquet_name: item.banquet_name,
-        banquet_address: item.banquet_address,
-        min_capacity: item.min_capacity,
-        max_capacity: item.max_capacity,
-        images: item.images ? [item.images.split(",")[0]] : []
-      }));
-  
-      res.status(200).json(formattedBookings);
-  
-    } catch (error) {
-      next(error);
-    }
-  });
+
   
   
 
