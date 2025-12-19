@@ -31,8 +31,8 @@ router.post('/create-order',async(req,res,next)=>{
 
         await pool.query(`
           INSERT INTO payments 
-          (booking_uid, total_amount, advance_paid, remaining_amount, payment_percent, razorpay_order_id)
-          VALUES (?, ?, ?, ?, 20, ?)
+          (booking_uid, total_amount, advance_paid, remaining_amount, payment_percent, razorpay_order_id, payment_status)
+          VALUES (?, ?, ?, ?, 20, ?, 'pending')
           ON DUPLICATE KEY UPDATE
             razorpay_order_id = VALUES(razorpay_order_id),
             advance_paid = VALUES(advance_paid),
@@ -40,10 +40,11 @@ router.post('/create-order',async(req,res,next)=>{
         `, [
           booking_uid,
           totalAmount,
-          advanceAmount / 100,
-          totalAmount - advanceAmount / 100,
+          advancePaid,        // ₹20000
+          remainingAmount,    // ₹80000
           order.id
         ]);
+        
         
           res.json({
             success: true,
@@ -82,12 +83,19 @@ router.post('/verify-payment', async (req, res, next) => {
     await pool.query(
       `UPDATE payments SET 
         razorpay_payment_id = ?,
+        transaction_id = ?,          -- ⭐ ADD THIS
         razorpay_signature = ?,
         payment_status = 'paid',
         payment_date = NOW()
       WHERE booking_uid = ?`,
-      [razorpay_payment_id, razorpay_signature, booking_uid]
+      [
+        razorpay_payment_id,
+        razorpay_payment_id,
+        razorpay_signature,
+        booking_uid
+      ]
     );
+    
 
     await pool.query(
       `UPDATE bookings 
