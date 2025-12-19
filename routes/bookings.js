@@ -13,7 +13,7 @@ function generateUniqueBookingID(user_id) {
     return `BK${year}${month}${day}U${user_id}R${random}`;
 }
 
-router.post('/:banquet_id', verifyAuthToken, async (req, res, next) => {
+router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
 
@@ -186,7 +186,7 @@ router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
 
 
 
-router.get('/:booking_uid', verifyAuthToken,async (req, res, next) => {
+router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
     try {
          const phone_number = req.user.phone_number;
         const { booking_uid } = req.params;
