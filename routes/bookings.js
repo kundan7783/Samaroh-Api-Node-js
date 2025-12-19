@@ -253,11 +253,11 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
 
         // 🔹 Default payment values agar record nahi hai
         if (!booking.payment_status) {
-            booking.advance_paid = 0;
-            booking.remaining_amount = 0;
-            booking.transaction_id = null;
-            booking.payment_status = "pending";
-            booking.payment_date = null;
+            booking.advance_paid = booking.advance_paid ?? 0;
+            booking.remaining_amount = booking.remaining_amount ?? booking.total_amount;
+            booking.transaction_id = booking.transaction_id ?? null;
+            booking.payment_status = booking.payment_status ?? "pending";
+            booking.payment_date = booking.payment_date ?? null;            
         }
 
         return res.status(200).json(booking);
