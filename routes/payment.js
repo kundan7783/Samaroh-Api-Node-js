@@ -10,52 +10,65 @@ const razorpay = new Razorpay({
     key_secret: process.env.RAZORPAY_SECRET
   });
 
-router.post('/create-order',async(req,res,next)=>{
-    try{
-        const { booking_uid } = req.body;
-        const [rows] = await pool.query(
-            "SELECT total_amount, payment_status FROM bookings WHERE booking_uid = ?",
-            [booking_uid]
-          );
-
-        if (rows.length === 0) return res.status(404).json({ success: false, message: "Booking not found" });
-        if (rows[0].payment_status === "paid") return res.status(400).json({ success: false, message: "Payment already done" });
-        const totalAmount = rows[0].total_amount;
-        const advanceAmount = Math.round(totalAmount * 0.20 * 100); 
-
-        const order = await razorpay.orders.create({
-            amount: advanceAmount,
-            currency: "INR",
-            receipt: booking_uid
-        });
-
-        await pool.query(`
-          INSERT INTO payments 
-          (booking_uid, total_amount, advance_paid, remaining_amount, payment_percent, razorpay_order_id, payment_status)
-          VALUES (?, ?, ?, ?, 20, ?, 'pending')
-          ON DUPLICATE KEY UPDATE
-            razorpay_order_id = VALUES(razorpay_order_id),
-            advance_paid = VALUES(advance_paid),
-            remaining_amount = VALUES(remaining_amount)
-        `, [
+  router.post('/create-order', async (req, res, next) => {
+    try {
+      const { booking_uid } = req.body;
+  
+      const [rows] = await pool.query(
+        "SELECT total_amount, payment_status FROM bookings WHERE booking_uid = ?",
+        [booking_uid]
+      );
+  
+      if (rows.length === 0)
+        return res.status(404).json({ success: false, message: "Booking not found" });
+  
+      if (rows[0].payment_status === "paid")
+        return res.status(400).json({ success: false, message: "Payment already done" });
+  
+      const totalAmount = Number(rows[0].total_amount);
+  
+      // 🔹 20% advance
+      const advanceAmount = Math.round(totalAmount * 0.20 * 100); // Razorpay (paise)
+      const advancePaid = advanceAmount / 100;                    // DB (₹)
+      const remainingAmount = totalAmount - advancePaid;
+  
+      const order = await razorpay.orders.create({
+        amount: advanceAmount,
+        currency: "INR",
+        receipt: booking_uid
+      });
+  
+      await pool.query(
+        `
+        INSERT INTO payments 
+        (booking_uid, total_amount, advance_paid, remaining_amount, payment_percent, razorpay_order_id, payment_status)
+        VALUES (?, ?, ?, ?, 20, ?, 'pending')
+        ON DUPLICATE KEY UPDATE
+          razorpay_order_id = VALUES(razorpay_order_id),
+          advance_paid = VALUES(advance_paid),
+          remaining_amount = VALUES(remaining_amount)
+        `,
+        [
           booking_uid,
           totalAmount,
-          advancePaid,        // ₹20000
-          remainingAmount,    // ₹80000
+          advancePaid,
+          remainingAmount,
           order.id
-        ]);
-        
-        
-          res.json({
-            success: true,
-            order_id: order.id,
-            amount: advanceAmount,
-            currency: "INR"
-          });
-    }catch(error){
-       next(error);
+        ]
+      );
+  
+      res.json({
+        success: true,
+        order_id: order.id,
+        amount: advanceAmount,
+        currency: "INR"
+      });
+  
+    } catch (error) {
+      next(error);
     }
-});
+  });
+  
 
 router.post('/verify-payment', async (req, res, next) => {
   try {
