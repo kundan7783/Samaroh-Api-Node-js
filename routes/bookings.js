@@ -200,11 +200,12 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
         // 2️⃣ Get booking + banquet + payment (LEFT JOIN)
         const [rows] = await pool.query(
             `
-           SELECT
+            SELECT
                 banquets.id,
                 banquets.images,    
                 banquets.banquet_name,
                 banquets.banquet_address,
+                
                 
                 bookings.booking_date,
                 bookings.total_guest,
@@ -224,11 +225,11 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
                 payments.transaction_id,
                 payments.payment_status,
                 payments.payment_date
+
             FROM bookings 
             JOIN banquets ON bookings.banquet_id = banquets.id
             LEFT JOIN payments ON bookings.booking_uid = payments.booking_uid
             WHERE bookings.user_id = ? AND bookings.booking_uid = ?
-
             `,
             [user_id, booking_uid]
         );
