@@ -41,27 +41,28 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
             food_type,
             price_per_plate,
             room_charge,
-            checkOnly // ⭐ new flag from client
+            checkOnly
         } = req.body;
 
-        // ❌ VALIDATION
-        if (!booking_date || !total_guest || !event_type) {
-            return res.status(400).json({
-                success: false,
-                message: "Required fields missing"
-            });
-        }
+        // // ❌ VALIDATION
+        // if (!booking_date || !total_guest || !event_type) {
+        //     return res.status(400).json({
+        //         success: false,
+        //         message: "Required fields missing"
+        //     });
+        // }
 
-        // 🔍 CHECK: Banquet already booked on same date
+        // 🔍 CHECK: Banquet already booked on same date (cancelled ignore)
         const [existingBooking] = await pool.query(
             `SELECT id FROM bookings 
              WHERE banquet_id = ? 
-             AND booking_date = ?`,
+             AND booking_date = ?
+             AND booking_status != 'cancelled'`,
             [banquet_id, booking_date]
         );
 
+        // ⭐ Only availability check
         if (checkOnly) {
-            // ⭐ If checkOnly, just return availability
             if (existingBooking.length > 0) {
                 return res.json({
                     success: false,
@@ -134,6 +135,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
         next(error);
     }
 });
+
 
 router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
     try {
@@ -266,6 +268,74 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
         next(error);
     }
 });
+
+router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
+  try {
+    const phone_number = req.user.phone_number;
+    const { booking_uid } = req.params;
+    const { cancel_reason } = req.body;
+
+    // 1️⃣ Get user_id
+    const [userRows] = await pool.query(
+      "SELECT user_id FROM authentications WHERE phone_number = ?",
+      [phone_number]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(400).json({ success: false, message: "User not found" });
+    }
+
+    const user_id = userRows[0].user_id;
+
+    // 2️⃣ Check booking exists & belongs to user
+    const [bookingRows] = await pool.query(
+      `SELECT booking_status, payment_status 
+       FROM bookings 
+       WHERE booking_uid = ? AND user_id = ?`,
+      [booking_uid, user_id]
+    );
+
+    if (bookingRows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found"
+      });
+    }
+
+    // 3️⃣ Already cancelled?
+    if (bookingRows[0].booking_status === 'cancelled') {
+      return res.status(400).json({
+        success: false,
+        message: "Booking already cancelled"
+      });
+    }
+
+    // 4️⃣ (Optional rule) Paid booking cancel policy
+    if (bookingRows[0].payment_status === 'paid') {
+      // agar chaho to yaha refund logic later add kar sakte ho
+      console.log("Paid booking cancelled");
+    }
+
+    // 5️⃣ Cancel booking
+    await pool.query(
+      `UPDATE bookings SET
+        booking_status = 'cancelled',
+        cancel_reason = ?,
+        cancelled_at = NOW()
+       WHERE booking_uid = ?`,
+      [cancel_reason || "User cancelled", booking_uid]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Booking cancelled successfully"
+    });
+
+  } catch (error) {
+    next(error);
+  }
+});
+
 
 
   
