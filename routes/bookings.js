@@ -217,7 +217,6 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
                 bookings.food_subtotal,
                 bookings.room_charge,
                 bookings.total_amount,
-                //  bookings.booking_status,  // <-- Add this line
                 bookings.created_at,
 
                 payments.advance_paid,

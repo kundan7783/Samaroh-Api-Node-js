@@ -132,7 +132,6 @@ const razorpay = new Razorpay({
       await pool.query(
         `UPDATE bookings 
          SET payment_status = 'paid'
-        //  booking_status = 'confirmed'
          WHERE booking_uid = ?`,
         [booking_uid]
       );
