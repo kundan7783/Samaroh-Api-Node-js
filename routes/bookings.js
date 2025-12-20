@@ -220,6 +220,9 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
                 bookings.booking_status,
                 bookings.created_at,
 
+                 bookings.cancel_reason,
+                 bookings.cancelled_at,
+
                 payments.advance_paid,
                 payments.remaining_amount,
                 payments.transaction_id,
@@ -282,7 +285,7 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
 
     const user_id = userRows[0].user_id;
 
-    // 2️⃣ Check booking exists & belongs to user
+    // 2️⃣ Check booking
     const [bookingRows] = await pool.query(
       `SELECT booking_status, payment_status 
        FROM bookings 
@@ -297,7 +300,6 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
       });
     }
 
-    // 3️⃣ Already cancelled?
     if (bookingRows[0].booking_status === 'cancelled') {
       return res.status(400).json({
         success: false,
@@ -305,31 +307,27 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
       });
     }
 
-    // 4️⃣ (Optional rule) Paid booking cancel policy
-    if (bookingRows[0].payment_status === 'paid') {
-      // agar chaho to yaha refund logic later add kar sakte ho
-      console.log("Paid booking cancelled");
-    }
-
-    // 5️⃣ Cancel booking
+    // 3️⃣ Cancel booking (IMPORTANT)
     await pool.query(
-      `UPDATE bookings SET
-        booking_status = 'cancelled',
-        cancel_reason = ?,
-        cancelled_at = NOW()
+      `UPDATE bookings 
+       SET booking_status = 'cancelled',
+           cancel_reason = ?,
+           cancelled_at = NOW()
        WHERE booking_uid = ?`,
       [cancel_reason || "User cancelled", booking_uid]
     );
 
     return res.status(200).json({
       success: true,
-      message: "Booking cancelled successfully"
+      message: "Booking cancelled successfully",
+      cancel_reason: cancel_reason || "User cancelled"
     });
 
   } catch (error) {
     next(error);
   }
 });
+
 
 
 
