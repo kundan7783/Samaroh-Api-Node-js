@@ -44,13 +44,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
             checkOnly
         } = req.body;
 
-        // // ❌ VALIDATION
-        // if (!booking_date || !total_guest || !event_type) {
-        //     return res.status(400).json({
-        //         success: false,
-        //         message: "Required fields missing"
-        //     });
-        // }
+    
 
         // 🔍 CHECK: Banquet already booked on same date (cancelled ignore)
         const [existingBooking] = await pool.query(
@@ -206,12 +200,11 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
         // 2️⃣ Get booking + banquet + payment (LEFT JOIN)
         const [rows] = await pool.query(
             `
-            SELECT
+           SELECT
                 banquets.id,
                 banquets.images,    
                 banquets.banquet_name,
                 banquets.banquet_address,
-                
                 
                 bookings.booking_date,
                 bookings.total_guest,
@@ -223,6 +216,7 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
                 bookings.food_subtotal,
                 bookings.room_charge,
                 bookings.total_amount,
+                bookings.booking_status,  // <-- Add this line
                 bookings.created_at,
 
                 payments.advance_paid,
@@ -230,11 +224,11 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
                 payments.transaction_id,
                 payments.payment_status,
                 payments.payment_date
-
             FROM bookings 
             JOIN banquets ON bookings.banquet_id = banquets.id
             LEFT JOIN payments ON bookings.booking_uid = payments.booking_uid
             WHERE bookings.user_id = ? AND bookings.booking_uid = ?
+
             `,
             [user_id, booking_uid]
         );
