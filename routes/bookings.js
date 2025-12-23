@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const pool = require("../db");
 const verifyAuthToken = require("../middleware/authHandeler");
+const verifySystemKey =require("../middleware/systemAuth");
 
 // 🔥 Unique Booking ID Generator
 function generateUniqueBookingID(user_id) {
@@ -328,65 +329,49 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
   }
 });
 
-router.post('/auto-cancel-unpaid', async (req, res, next) => {
+router.post('/auto-cancel-unpaid', verifySystemKey, async (req, res, next) => {
   try {
-    const [result] = await pool.query(
-      `
-      UPDATE bookings
-      SET 
-        booking_status = 'cancelled',
-        cancel_reason = 'No payment within 1 hour',
-        cancelled_at = NOW()
-      WHERE 
-        booking_status = 'pending'
-        AND payment_status = 'pending'
-        AND created_at <= NOW() - INTERVAL 1 HOUR
-      `
-    );
-
-    res.json({
-      success: true,
-      message: "Unpaid bookings auto cancelled",
-      cancelled_count: result.affectedRows
-    });
-
+      const [result] = await pool.query(`
+          UPDATE bookings
+          SET 
+              booking_status = 'cancelled',
+              cancel_reason = 'No payment within 1 hour',
+              cancelled_at = NOW()
+          WHERE 
+              booking_status = 'pending'
+              AND payment_status = 'pending'
+              AND created_at <= NOW() - INTERVAL 1 HOUR
+      `);
+      res.json({
+          success: true,
+          message: "Unpaid bookings auto cancelled",
+          cancelled_count: result.affectedRows
+      });
   } catch (error) {
-    next(error);
+      next(error);
   }
 });
 
-
-router.post('/auto-confirm', async (req, res, next) => {
+// AUTO CONFIRM (SYSTEM ONLY)
+router.post('/auto-confirm', verifySystemKey, async (req, res, next) => {
   try {
-    // 🔹 Update all eligible bookings
-    const [result] = await pool.query(
-      `
-      UPDATE bookings
-      SET booking_status = 'confirmed'
-      WHERE 
-        booking_status = 'upcoming'
-        AND payment_status = 'paid'
-        AND booking_date <= CURDATE()
-      `
-    );
-
-    res.json({
-      success: true,
-      message: "Bookings auto confirmed",
-      updated: result.affectedRows
-    });
-
+      const [result] = await pool.query(`
+          UPDATE bookings
+          SET booking_status = 'confirmed'
+          WHERE 
+              booking_status = 'upcoming'
+              AND payment_status = 'paid'
+              AND booking_date <= CURDATE()
+      `);
+      res.json({
+          success: true,
+          message: "Bookings auto confirmed",
+          updated: result.affectedRows
+      });
   } catch (error) {
-    next(error);
+      next(error);
   }
 });
-
-
-
-
-
-  
-  
 
 module.exports = router;
 

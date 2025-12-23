@@ -1,6 +1,8 @@
-require('dotenv').config();
+require('dotenv').config();        // 🔹 Environment variables load
+require('./cron');                 // 🔹 Cron job activate
 const express = require('express');
 const bodyParser = require('body-parser');
+// 🔹 Routes import
 const authRouters = require('./routes/auth');
 const userRouters = require('./routes/user');
 const banquetRouters = require('./routes/banquets');
@@ -10,29 +12,35 @@ const clearTableRouters = require('./routes/clearTable');
 const bookingRouters = require('./routes/bookings');
 const createTableRouters = require('./routes/createTable');
 const paymentRouters = require('./routes/payment');
+
+// 🔹 Middleware
 const errorHandler = require('./middleware/errorHandler');
 
-
 const app = express();
-app.use(bodyParser.json());
-app.use("/uploades_images",express.static("uploades_images"));
 
+// 🔹 Body parser
+app.use(bodyParser.json());
+
+// 🔹 Static folder for images
+app.use("/uploades_images", express.static("uploades_images"));
+
+// 🔹 Default route
 app.get('/', (req, res) => res.json({ message: 'Banquet API running' }));
 
+// 🔹 API routes
+app.use('/api/auth', authRouters);
+app.use('/api/user', userRouters);
+app.use('/api/banquet', banquetRouters);
+app.use('/api/rating', ratingRouters);
+app.use('/api/wishlist', wishlistRouters);
+app.use('/api/clear-table', clearTableRouters);
+app.use('/api/booking', bookingRouters);
+app.use('/api/createTable', createTableRouters);
+app.use('/api/payment', paymentRouters);
 
-app.use('/api/auth',authRouters);
-app.use('/api/user',userRouters);
-app.use('/api/banquet',banquetRouters);
-app.use('/api/rating',ratingRouters);
-app.use('/api/wishlist',wishlistRouters);
-app.use('/api/clear-table',clearTableRouters);
-app.use('/api/booking',bookingRouters);
-app.use('/api/createTable',createTableRouters);
- app.use('/api/payment',paymentRouters);
-
-
-
+// 🔹 Error handler
 app.use(errorHandler);
 
+// 🔹 Start server
 const PORT = process.env.PORT || 5000;
-app.listen(PORT,()=> console.log(`Serever running on port ${PORT}`));
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
