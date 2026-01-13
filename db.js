@@ -5,9 +5,9 @@ const pool = mysql.createPool({
     user: process.env.DB_USER,
     password: process.env.DB_PASS,
     database: process.env.DB_NAME,
-    waitForConnections : true,  //Jab database me saare connections busy ho jaye, to new request ko wait karne do, error mat do.
-    connectionLimit : 10,     //Ek time me max 10 database connections allow hain.
-    queueLimit : 0,           // New requests queue me unlimited wait kar sakti hai.
+    waitForConnections : true,  
+    connectionLimit : 10,    
+    queueLimit : 0,         
     connectTimeout: 20000, 
     acquireTimeout: 20000  
 });

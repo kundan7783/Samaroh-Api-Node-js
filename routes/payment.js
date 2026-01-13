@@ -27,8 +27,8 @@ const razorpay = new Razorpay({
   
       const totalAmount = Number(rows[0].total_amount);
   
-      // 🔹 20% advance
-      const advanceAmount = Math.round(totalAmount * 0.20 * 100); // Razorpay (paise)
+  
+      const advanceAmount = Math.round(totalAmount * 0.20 * 100); 
       const advancePaid = advanceAmount / 100;                    // DB (₹)
       const remainingAmount = totalAmount - advancePaid;
   
@@ -93,7 +93,6 @@ const razorpay = new Razorpay({
         });
       }
   
-      // 🔹 Get total_amount from payments table
       const [paymentRows] = await pool.query(
         "SELECT total_amount FROM payments WHERE booking_uid = ?",
         [booking_uid]
@@ -107,7 +106,7 @@ const razorpay = new Razorpay({
       const advancePaid = totalAmount * 0.20;
       const remainingAmount = totalAmount - advancePaid;
   
-      // 🔹 Update payments table
+  
       await pool.query(
         `UPDATE payments SET 
           razorpay_payment_id = ?,
@@ -128,7 +127,6 @@ const razorpay = new Razorpay({
         ]
       );
   
-      // 🔹 Update bookings table
       await pool.query(
         `UPDATE bookings 
          SET payment_status = 'paid',

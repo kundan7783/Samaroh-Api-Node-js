@@ -4,7 +4,6 @@ const pool = require("../db");
 const verifyAuthToken = require("../middleware/authHandeler");
 const verifySystemKey =require("../middleware/systemAuth");
 
-// 🔥 Unique Booking ID Generator
 function generateUniqueBookingID(user_id) {
     const now = new Date();
     const year = now.getFullYear();
@@ -18,7 +17,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
 
-        // 1️⃣ Get user_id
+    
         const [userRows] = await pool.query(
             "SELECT user_id FROM authentications WHERE phone_number = ?",
             [phone_number]
@@ -47,7 +46,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
 
     
 
-        // 🔍 CHECK: Banquet already booked on same date (cancelled ignore)
+        //  CHECK: Banquet already booked on same date (cancelled ignore)
         const [existingBooking] = await pool.query(
             `SELECT id FROM bookings 
              WHERE banquet_id = ? 
@@ -56,7 +55,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
             [banquet_id, booking_date]
         );
 
-        // ⭐ Only availability check
+        //  Only availability check
         if (checkOnly) {
             if (existingBooking.length > 0) {
                 return res.json({
@@ -71,7 +70,7 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
             }
         }
 
-        // 🔹 Normal booking flow
+
         if (existingBooking.length > 0) {
             return res.status(409).json({
                 success: false,
@@ -79,14 +78,12 @@ router.post('/create/:banquet_id', verifyAuthToken, async (req, res, next) => {
             });
         }
 
-        // 4️⃣ Calculations
+
         const food_subtotal = total_guest * price_per_plate;
         const total_amount = food_subtotal + room_charge;
 
-        // 5️⃣ Booking UID
+    
         const booking_uid = generateUniqueBookingID(user_id);
-
-        // 6️⃣ Insert booking
         await pool.query(
             `INSERT INTO bookings (
                 booking_uid,
@@ -136,7 +133,7 @@ router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
     try {
       const phone_number = req.user.phone_number;
   
-      // 1️⃣ Get user_id
+   
       const [userRows] = await pool.query(
         "SELECT user_id FROM authentications WHERE phone_number = ?",
         [phone_number]
@@ -146,7 +143,6 @@ router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
       }
       const user_id = userRows[0].user_id;
   
-      // 2️⃣ Get all bookings for this user
       const [rows] = await pool.query(
         `
         SELECT 
@@ -164,7 +160,7 @@ router.get('/all/booking', verifyAuthToken, async (req, res, next) => {
         [user_id]
       );
   
-      // 3️⃣ Format images for each booking
+    
       const formattedBookings = rows.map(item => ({
         booking_uid: item.booking_uid,
         banquet_name: item.banquet_name,
@@ -188,7 +184,7 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
          const phone_number = req.user.phone_number;
         const { booking_uid } = req.params;
 
-        // 1️⃣ Get user_id
+      
         const [userRows] = await pool.query(
             "SELECT user_id FROM authentications WHERE phone_number = ?",
             [phone_number]
@@ -198,7 +194,7 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
         }
         const user_id =  userRows[0].user_id;
 
-        // 2️⃣ Get booking + banquet + payment (LEFT JOIN)
+       
         const [rows] = await pool.query(
             `
             SELECT
@@ -244,15 +240,13 @@ router.get('/details/:booking_uid', verifyAuthToken,async (req, res, next) => {
 
         const booking = rows[0];
 
-        // 🔹 Images array with only first image
+       
         if (booking.images) {
-            const imgArray = booking.images.split(",");  // agar comma separated
-            booking.images = [imgArray[0]];  // first image as array
+            const imgArray = booking.images.split(",");  
+            booking.images = [imgArray[0]];  
         } else {
-            booking.images = []; // agar image nahi hai
+            booking.images = []; 
         }
-
-        // 🔹 Default payment values agar record nahi hai
         if (!booking.payment_status) {
             booking.advance_paid = booking.advance_paid ?? 0;
             booking.remaining_amount = booking.remaining_amount ?? booking.total_amount;
@@ -274,7 +268,6 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
     const { booking_uid } = req.params;
     const { cancel_reason } = req.body;
 
-    // 1️⃣ Get user_id
     const [userRows] = await pool.query(
       "SELECT user_id FROM authentications WHERE phone_number = ?",
       [phone_number]
@@ -286,7 +279,7 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
 
     const user_id = userRows[0].user_id;
 
-    // 2️⃣ Check booking
+   
     const [bookingRows] = await pool.query(
       `SELECT booking_status, payment_status 
        FROM bookings 
@@ -308,7 +301,6 @@ router.post('/cancel/:booking_uid', verifyAuthToken, async (req, res, next) => {
       });
     }
 
-    // 3️⃣ Cancel booking (IMPORTANT)
     await pool.query(
       `UPDATE bookings 
        SET booking_status = 'cancelled',
@@ -352,7 +344,7 @@ router.post('/auto-cancel-unpaid', verifySystemKey, async (req, res, next) => {
   }
 });
 
-// AUTO CONFIRM (SYSTEM ONLY)
+
 router.post('/auto-confirm', verifySystemKey, async (req, res, next) => {
   try {
       const [result] = await pool.query(`

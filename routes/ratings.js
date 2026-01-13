@@ -4,14 +4,11 @@ const pool = require("../db");
 const verifyAuthToken = require("../middleware/authHandeler");
 const upload = require("../controllers/image_upload_controller"); // tumhara multer config
 
-
-// ⭐ ADD RATING API
 router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (req, res, next) => {
     try {
         const { banquet_id } = req.params;
         const phone_number = req.user.phone_number;
 
-        // Get User ID
         const [userRows] = await pool.query(
             "SELECT user_id FROM authentications WHERE phone_number = ?",
             [phone_number]
@@ -24,20 +21,20 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
         const userId = userRows[0].user_id;
 
         const { rating, review_text } = req.body;
-        // Handle Images
+       
         let images = null;
         if (req.files && req.files.length > 0) {
             images = JSON.stringify(req.files.map(file => file.filename));
         }
 
-        // ⭐ Step 1: Check if rating already exists
+      
         const [existing] = await pool.query(
             "SELECT * FROM ratings WHERE banquet_id = ? AND user_id = ?",
             [banquet_id, userId]
         );
 
         if (existing.length > 0) {
-            // ⭐ Step 2: UPDATE (Overwrite)
+           
             await pool.query(
                 `UPDATE ratings 
                  SET rating = ?, review_text = ?, images = ?
@@ -51,7 +48,7 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
             });
         }
 
-        // ⭐ Step 3: INSERT (first time rating)
+       
         const [result] = await pool.query(
             `INSERT INTO ratings (banquet_id, user_id, rating, review_text, images)
              VALUES (?, ?, ?, ?, ?)`,
@@ -90,14 +87,14 @@ router.get('/:banquet_id', verifyAuthToken, async (req, res, next) => {
             [banquet_id]
         );
 
-        // Convert JSON string → array
+       
         const ratings = rows.map(r => {
             let imagesArray = [];
             if (r.images) {
                 try {
-                    imagesArray = JSON.parse(r.images); // ✅ Proper array
+                    imagesArray = JSON.parse(r.images); 
                 } catch (err) {
-                    imagesArray = []; // agar JSON parse fail ho jaye
+                    imagesArray = []; 
                 }
             }
 
@@ -149,7 +146,7 @@ router.get('/summary/:banquet_id',verifyAuthToken, async (req, res, next) => {
 
         res.json({
             success: true,
-            average_rating: avg.toFixed(1), // "4.2" like your example
+            average_rating: avg.toFixed(1), 
             total_reviews: totalReviews,
             stars: stars
         });

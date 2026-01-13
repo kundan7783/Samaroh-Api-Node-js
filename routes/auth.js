@@ -71,13 +71,9 @@ router.post('/verify-otp', async (req, res, next) => {
             return res.json({ message: "Invalid OTP", status: result.status });
         }
 
-        // Generate JWT Tokens
         const { accessToken, expireToken } = generateTokens(phone);
-
-        // OTP expires after 5 minutes
         const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
 
-        // Check if user exists
         const [authRow] = await myDB.query(
             "SELECT * FROM authentications WHERE phone_number = ?",
             [phone]
@@ -86,7 +82,6 @@ router.post('/verify-otp', async (req, res, next) => {
         let user_id = null;
 
         if (authRow.length === 0) {
-            // INSERT
              await myDB.query(
                 `INSERT INTO authentications 
                 (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
@@ -97,7 +92,7 @@ router.post('/verify-otp', async (req, res, next) => {
             
         } else {
             user_id = authRow[0].user_id;  
-            // UPDATE
+
             await myDB.query(
                 `UPDATE authentications 
                 SET otp_code = ?, otp_expires_at = ?, expire_token = ?, is_verified = ?
@@ -131,7 +126,6 @@ router.post('/refresh-token', async (req, res, next) => {
             });
         }
 
-        // VERIFY REFRESH TOKEN
         jwt.verify(refreshToken, process.env.JWT_REFRESH_SECRET, async (error, decoded) => {
 
             if (error) {
@@ -141,10 +135,10 @@ router.post('/refresh-token', async (req, res, next) => {
                 });
             }
 
-            // decoded object contains phone_number
+            
             const phone_number = decoded.phone_number;
 
-            // GENERATE NEW TOKENS
+            
             const { accessToken, expireToken } = generateTokens(phone_number);
 
             return res.status(200).json({

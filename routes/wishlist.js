@@ -19,7 +19,6 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
         const user_id = userRows[0].user_id;
         const { banquet_id } = req.body;
 
-        // ⭐ Check if banquet exists
         const [banquetRows] = await pool.query(
             "SELECT id FROM banquets WHERE id = ?",
             [banquet_id]
@@ -29,7 +28,6 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
             return res.status(400).json({ success: false, message: "Banquet does not exist" });
         }
 
-        // Check existing wishlist
         const [rows] = await pool.query(
             "SELECT * FROM wishlist WHERE user_id = ? AND banquet_id = ?",
             [user_id, banquet_id]
@@ -64,12 +62,11 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
         next(error);
     }
 });
-// GET /api/wishlist
+
 router.get("/", verifyAuthToken, async (req, res, next) => {
     try {
         const phone_number = req.user.phone_number;
 
-        // Get user_id
         const [userRows] = await pool.query(
             "SELECT user_id FROM authentications WHERE phone_number = ?",
             [phone_number]
@@ -81,7 +78,6 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
 
         const user_id = userRows[0].user_id;
 
-        // Get all liked banquets
         const [wishlist] = await pool.query(
             `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district , b.rating , b.images
              FROM wishlist w
@@ -97,7 +93,6 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
             return b;
         });
 
-        //console.log(banquets);
 
         return res.json(banquets);
 
