@@ -8,9 +8,7 @@ const userRouters = require('./routes/user');
 const banquetRouters = require('./routes/banquets');
 const ratingRouters = require('./routes/ratings');
 const wishlistRouters = require('./routes/wishlist');
-const clearTableRouters = require('./routes/clearTable');
 const bookingRouters = require('./routes/bookings');
-const createTableRouters = require('./routes/createTable');
 const paymentRouters = require('./routes/payment');
 
 
@@ -32,9 +30,7 @@ app.use('/api/user', userRouters);
 app.use('/api/banquet', banquetRouters);
 app.use('/api/rating', ratingRouters);
 app.use('/api/wishlist', wishlistRouters);
-app.use('/api/clear-table', clearTableRouters);
 app.use('/api/booking', bookingRouters);
-app.use('/api/createTable', createTableRouters);
 app.use('/api/payment', paymentRouters);
 
 

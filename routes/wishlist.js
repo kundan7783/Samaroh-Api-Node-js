@@ -17,6 +17,7 @@ router.post("/", verifyAuthToken, async (req, res,next) => {
         }
 
         const user_id = userRows[0].user_id;
+        
         const { banquet_id } = req.body;
 
         const [banquetRows] = await pool.query(
