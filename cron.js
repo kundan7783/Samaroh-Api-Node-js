@@ -4,7 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const SYSTEM_KEY = process.env.SYSTEM_SECRET_KEY;
-const BASE_URL = 'https://samaroh-api-node-js.onrender.com/api/booking'; // agar live, to live URL
+const BASE_URL = 'https://samaroh.edugaondev.com/api/booking'; // agar live, to live URL
 
 // Har 10 minute me run
 cron.schedule('*/10 * * * *', async () => {

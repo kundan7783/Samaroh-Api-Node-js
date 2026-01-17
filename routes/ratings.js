@@ -20,7 +20,7 @@ router.post("/:banquet_id", verifyAuthToken, upload.array("images", 4), async (r
 
         const userId = userRows[0].user_id;
 
-        const { rating, review_text } = req.body;
+        const { rating , review_text } = req.body;
        
         let images = null;
         if (req.files && req.files.length > 0) {
