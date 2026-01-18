@@ -15,13 +15,13 @@ function generateTokens(phone_number) {
         { expiresIn: "30d" }
     );
 
-    const expireToken = jwt.sign(
+    const refreshToken = jwt.sign(
         { phone_number },
         process.env.JWT_REFRESH_SECRET,
         { expiresIn: "60d" }
     );
 
-    return { accessToken, expireToken };
+    return { accessToken, refreshToken };
 }
 
 
@@ -71,7 +71,7 @@ router.post('/verify-otp', async (req, res, next) => {
             return res.json({ message: "Invalid OTP", status: result.status });
         }
 
-        const { accessToken, expireToken } = generateTokens(phone);
+        const { accessToken, refreshToken } = generateTokens(phone);
         const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
 
         const [authRow] = await myDB.query(
@@ -86,7 +86,7 @@ router.post('/verify-otp', async (req, res, next) => {
                 `INSERT INTO authentications 
                 (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
                 VALUES (?, ?, ?, ?, ?)`,
-                [phone, otp_code, otpExpireTime, expireToken, true]
+                [phone, otp_code, otpExpireTime, refreshToken, true]
             );
             user_id = null;
             
@@ -97,7 +97,7 @@ router.post('/verify-otp', async (req, res, next) => {
                 `UPDATE authentications 
                 SET otp_code = ?, otp_expires_at = ?, expire_token = ?, is_verified = ?
                 WHERE phone_number = ?`,
-                [otp_code, otpExpireTime, expireToken, true, phone]
+                [otp_code, otpExpireTime, refreshToken, true, phone]
             );
         }
 
@@ -105,7 +105,7 @@ router.post('/verify-otp', async (req, res, next) => {
             message: "OTP Verified Successfully",
             user_id: user_id,
             accessToken,
-            expireToken,
+            refreshToken,
             status: result.status
         });
 
@@ -139,13 +139,13 @@ router.post('/refresh-token', async (req, res, next) => {
             const phone_number = decoded.phone_number;
 
             
-            const { accessToken, expireToken } = generateTokens(phone_number);
+            const { accessToken, refreshToken } = generateTokens(phone_number);
 
             return res.status(200).json({
                 success: true,
                 message: "New access and refresh token generated successfully!",
                 accessToken: accessToken,
-                refreshToken: expireToken
+                refreshToken
             });
 
         });
