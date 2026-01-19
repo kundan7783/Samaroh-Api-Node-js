@@ -12,7 +12,8 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
             contact_number,
             banquet_map_link,
             description,
-            rating,
+            latitude,
+            longitude,
             district,
             min_capacity,
             max_capacity,
@@ -36,7 +37,8 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 contact_number,
                 banquet_map_link,
                 description,
-                rating,
+                latitude,
+                longitude,
                 district,
                 min_capacity,
                 max_capacity,
@@ -45,7 +47,7 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 nonveg_price,
                 images
               
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
             ,
             [
                 feature_id,
@@ -54,7 +56,8 @@ router.post("/", upload.array("imagesString", 25), async (req, res, next) => {
                 contact_number,
                 banquet_map_link,
                 description,
-                rating,
+                latitude,
+                longitude,
                 district,
                 min_capacity,
                 max_capacity,
@@ -89,7 +92,8 @@ router.get("/:id", async (req, res, next) => {
                 banquets.contact_number,
                 banquets.banquet_map_link,
                 banquets.description,
-                banquets.rating,
+                banquets.latitude,
+                banquets.longitude,
                 banquets.district,
                 banquets.min_capacity,
                 banquets.max_capacity,
@@ -147,7 +151,6 @@ router.get("/district/:district", async (req, res, next) => {
                 min_capacity,
                 max_capacity,
                 veg_price,
-                rating,
                 district,
                 nonveg_price,
                 images
@@ -184,7 +187,6 @@ router.get('/popular/place', async (req, res, next) => {
                 min_capacity,
                 max_capacity,
                 veg_price,
-                rating,
                 district,
                 nonveg_price,
                 images
