@@ -12,13 +12,13 @@ function generateTokens(phone_number) {
     const accessToken = jwt.sign(
         {phone_number},
         process.env.JWT_ACCESS_SECRET,
-        { expiresIn: "5m" }
+        { expiresIn: "30d" }
     );
 
     const refreshToken = jwt.sign(
         { phone_number },
         process.env.JWT_REFRESH_SECRET,
-        { expiresIn: "10m" }
+        { expiresIn: "60d" }
     );
 
     return { accessToken, refreshToken };
