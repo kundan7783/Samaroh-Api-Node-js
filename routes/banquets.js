@@ -101,7 +101,6 @@ router.get("/:id", async (req, res, next) => {
                 banquets.veg_price,
                 banquets.nonveg_price,
                 banquets.images,
-
                 banquet_features.ac, 
                 banquet_features.wifi, 
                 banquet_features.cctv, 
