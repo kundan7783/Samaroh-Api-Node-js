@@ -80,7 +80,7 @@ router.get("/", verifyAuthToken, async (req, res, next) => {
         const user_id = userRows[0].user_id;
 
         const [wishlist] = await pool.query(
-            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district , b.rating , b.images
+            `SELECT w.banquet_id, b.banquet_name, b.banquet_address, b.veg_price , b.nonveg_price , b.min_capacity, b.max_capacity , b.district , b.images
              FROM wishlist w
              JOIN banquets b ON w.banquet_id = b.id
              WHERE w.user_id = ? AND w.is_wishlist = 1`,
