@@ -6,6 +6,8 @@ const { client, service } = require('../twilioConfig');
 const myDB = require('../db');
 const router = express.Router();
 
+const REVIEW_PHONE = "9117719625";
+
 
 
 function generateTokens(phone_number) {
@@ -37,6 +39,13 @@ router.post('/send-otp', phoneValidator, async (req, res, next) => {
 
     try {
         let { phone } = req.body;
+
+        if (phone === REVIEW_PHONE) {
+            return res.json({
+                message: "OTP bypassed for review account",
+                status: "approved"
+            });
+        }
 
         const result = await client.verify.v2
             .services(service)
