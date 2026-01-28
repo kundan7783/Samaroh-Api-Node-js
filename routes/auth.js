@@ -7,7 +7,7 @@ const myDB = require('../db');
 const router = express.Router();
 
 
-const NODE_ENV=production;
+// const NODE_ENV="production";
 const REVIEW_PHONE="9117719625";
 
 
