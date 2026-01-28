@@ -68,7 +68,19 @@ router.post('/verify-otp', async (req, res, next) => {
         const { phone, otp_code } = req.body;
 
         if (!phone) return res.json({ message: "Phone is required" });
+        if (phone === REVIEW_PHONE) {
+            const { accessToken, refreshToken } = generateTokens(phone);
+
+            return res.json({
+                message: "Login successful (OTP bypass for review)",
+                user_id: null,
+                accessToken,
+                refreshToken,
+                status: "approved"
+            });
+        }
         if (!otp_code) return res.json({ message: "OTP is required" });
+
 
      
         const result = await client.verify.v2
