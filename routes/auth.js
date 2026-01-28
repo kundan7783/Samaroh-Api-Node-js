@@ -6,7 +6,9 @@ const { client, service } = require('../twilioConfig');
 const myDB = require('../db');
 const router = express.Router();
 
-const REVIEW_PHONE = "9117719625";
+
+const NODE_ENV=production;
+const REVIEW_PHONE="9117719625";
 
 
 
