@@ -9,6 +9,7 @@ const router = express.Router();
 
 // const NODE_ENV="production";
 const REVIEW_PHONE="9117719625";
+const OTP = "778306";
 
 
 
@@ -45,7 +46,7 @@ router.post('/send-otp', phoneValidator, async (req, res, next) => {
         if (phone === REVIEW_PHONE) {
             return res.json({
                 message: "OTP bypassed for review account",
-                status: "approved"
+                status: "pending"
             });
         }
 
