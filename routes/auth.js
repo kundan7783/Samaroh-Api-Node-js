@@ -9,7 +9,7 @@ const router = express.Router();
 
 // const NODE_ENV="production";
 const REVIEW_PHONE="9117719625";
-const OTP = "778306";
+const OTP = "123456";
 
 
 
@@ -71,8 +71,34 @@ router.post('/verify-otp', async (req, res, next) => {
         const { phone, otp_code } = req.body;
 
         if (!phone) return res.json({ message: "Phone is required" });
-        if (phone === REVIEW_PHONE) {
+        ////////////////////////// Trile 
+        if (phone === REVIEW_PHONE && otp_code === OTP) {
             const { accessToken, refreshToken } = generateTokens(phone);
+            const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
+                const [authRow] = await myDB.query(
+                    "SELECT * FROM authentications WHERE phone_number = ?",
+                    [phone]
+                );
+            let user_id = null;
+             if (authRow.length === 0) {
+             await myDB.query(
+                `INSERT INTO authentications 
+                (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
+                VALUES (?, ?, ?, ?, ?)`,
+                [phone, otp_code, otpExpireTime, refreshToken, true]
+            );
+            user_id = null;
+            
+        } else {
+            user_id = authRow[0].user_id;  
+
+            await myDB.query(
+                `UPDATE authentications 
+                SET otp_code = ?, otp_expires_at = ?, expire_token = ?, is_verified = ?
+                WHERE phone_number = ?`,
+                [otp_code, otpExpireTime, refreshToken, true, phone]
+            );
+        }
 
             return res.json({
                 message: "Login successful (OTP bypass for review)",
@@ -81,7 +107,9 @@ router.post('/verify-otp', async (req, res, next) => {
                 refreshToken,
                 status: "approved"
             });
+    
         }
+        ///////////////////////// Traile End
         if (!otp_code) return res.json({ message: "OTP is required" });
 
 
