@@ -102,7 +102,7 @@ router.post('/verify-otp', async (req, res, next) => {
 
             return res.json({
                 message: "Login successful (OTP bypass for review)",
-                user_id: null,
+                user_id: user_id,
                 accessToken,
                 refreshToken,
                 status: "approved"
