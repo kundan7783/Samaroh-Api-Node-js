@@ -7,8 +7,6 @@ const myDB = require('../db');
 const router = express.Router();
 
 
-// const NODE_ENV="production";
-const REVIEW_PHONE="9117719625";
 const OTP = "123456";
 
 
@@ -41,24 +39,26 @@ router.post('/send-otp', phoneValidator, async (req, res, next) => {
     }
 
     try {
-        let { phone } = req.body;
+       let { phone } = req.body;
 
-        if (phone === REVIEW_PHONE) {
-            return res.json({
-                message: "OTP bypassed for review account",
-                status: "pending"
-            });
+        if (!phone) {
+            return res.json({ message: "Phone is required" });
         }
-
-        const result = await client.verify.v2
-            .services(service)
-            .verifications
-            .create({ to: `+91${phone}`, channel: "sms" });
-
-        res.json({
+        return res.json({
             message: "OTP Sent Successfully",
-            status: result.status
+            status: "pending"
         });
+
+
+        // const result = await client.verify.v2
+        //     .services(service)
+        //     .verifications
+        //     .create({ to: `+91${phone}`, channel: "sms" });
+
+        // res.json({
+        //     message: "OTP Sent Successfully",
+        //     status: result.status
+        // });
 
     } catch (error) {
         next(error);
@@ -72,56 +72,61 @@ router.post('/verify-otp', async (req, res, next) => {
 
         if (!phone) return res.json({ message: "Phone is required" });
         ////////////////////////// Trile 
-        if (phone === REVIEW_PHONE && otp_code === OTP) {
-            const { accessToken, refreshToken } = generateTokens(phone);
-            const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
-                const [authRow] = await myDB.query(
-                    "SELECT * FROM authentications WHERE phone_number = ?",
-                    [phone]
-                );
-            let user_id = null;
-             if (authRow.length === 0) {
-             await myDB.query(
-                `INSERT INTO authentications 
-                (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
-                VALUES (?, ?, ?, ?, ?)`,
-                [phone, otp_code, otpExpireTime, refreshToken, true]
-            );
-            user_id = null;
+        // if (phone === REVIEW_PHONE && otp_code === OTP) {
+        //     const { accessToken, refreshToken } = generateTokens(phone);
+        //     const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
+        //         const [authRow] = await myDB.query(
+        //             "SELECT * FROM authentications WHERE phone_number = ?",
+        //             [phone]
+        //         );
+        //     let user_id = null;
+        //      if (authRow.length === 0) {
+        //      await myDB.query(
+        //         `INSERT INTO authentications 
+        //         (phone_number, otp_code, otp_expires_at, expire_token, is_verified) 
+        //         VALUES (?, ?, ?, ?, ?)`,
+        //         [phone, otp_code, otpExpireTime, refreshToken, true]
+        //     );
+        //     user_id = null;
             
-        } else {
-            user_id = authRow[0].user_id;  
+        // } else {
+        //     user_id = authRow[0].user_id;  
 
-            await myDB.query(
-                `UPDATE authentications 
-                SET otp_code = ?, otp_expires_at = ?, expire_token = ?, is_verified = ?
-                WHERE phone_number = ?`,
-                [otp_code, otpExpireTime, refreshToken, true, phone]
-            );
-        }
+        //     await myDB.query(
+        //         `UPDATE authentications 
+        //         SET otp_code = ?, otp_expires_at = ?, expire_token = ?, is_verified = ?
+        //         WHERE phone_number = ?`,
+        //         [otp_code, otpExpireTime, refreshToken, true, phone]
+        //     );
+        // }
 
-            return res.json({
-                message: "Login successful (OTP bypass for review)",
-                user_id: user_id,
-                accessToken,
-                refreshToken,
-                status: "approved"
-            });
+        //     return res.json({
+        //         message: "Login successful (OTP bypass for review)",
+        //         user_id: user_id,
+        //         accessToken,
+        //         refreshToken,
+        //         status: "approved"
+        //     });
     
-        }
+        // }
         ///////////////////////// Traile End
         if (!otp_code) return res.json({ message: "OTP is required" });
 
+        if (otp_code !== OTP) {
+            return res.status(400).json({
+                message: "Invalid OTP"    
+            });
+        }
 
      
-        const result = await client.verify.v2
-            .services(service)
-            .verificationChecks
-            .create({ to: `+91${phone}`, code: otp_code });
+        // const result = await client.verify.v2
+        //     .services(service)
+        //     .verificationChecks
+        //     .create({ to: `+91${phone}`, code: otp_code });
 
-        if (result.status !== "approved") {
-            return res.json({ message: "Invalid OTP", status: result.status });
-        }
+        // if (result.status !== "approved") {
+        //     return res.json({ message: "Invalid OTP", status: result.status });
+        // }
 
         const { accessToken, refreshToken } = generateTokens(phone);
         const otpExpireTime = new Date(Date.now() + 5 * 60 * 1000);
@@ -158,7 +163,8 @@ router.post('/verify-otp', async (req, res, next) => {
             user_id: user_id,
             accessToken,
             refreshToken,
-            status: result.status
+            status: "approved"
+            // status: result.status
         });
 
     } catch (error) {
